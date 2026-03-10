@@ -1,0 +1,327 @@
+{
+    "topnav": {
+        "language": "language",
+        "English": "English",
+        "Chinese": "Chinese",
+        "German": "German",
+        "OpenLicensingPlatform": "OpenLicensingPlatform",
+        "Team": "Team",
+        "News": "News",
+        "IP_Economics": "IP Economics",
+        "IP_Intelligence": "IP Intelligence",
+        "Patent_Value_Survey": "Patent Value Survey",
+        "Home":"Home",
+        "menu":"menu",
+        "Survey_Method": "Survey Method",
+        "Survey_Fill": "Survey Fill",
+        "Survey_Results": "Survey Results",
+        "Survey_Utils": "样本专利权人检索",
+        "DataUsageInstructions": "Data Usage Instructions"
+    },
+    "team": {
+        "LiuXia1": "Liu Xia",
+        "LiuXia2": "刘夏",
+        "WangXiaolu1": "Wang Xiaolu",
+        "WangXiaolu2": "王晓璐",
+        "ChenLi1": "Chen Li",
+        "ChenLi2": "陈栗",
+        "WangJie1": "Wang Jie",
+        "WangJie2": "王洁",
+        "LiuXiaP": "Assistant Professor, Tongji University, Shanghai International College of Intellectual Property. Visiting scholar, Zhejiang University. School of Management, co-supervisor of the Law and Economics Research Center of ETH Zurich, Switzerland. Research field: enterprise intellectual property strategy, intellectual property system and competition policy.",
+        "WangXiaoluP": "Assistant professor, University of Massachusetts Amherst. Research fellow at the Max Planck Institute for Innovation and Competition. Faculty Associate at the Canadian Centre for Health Economics Research field: economics of innovation & digitization in health care markets (national and global), Ph.D in Economics, Cornell University.",
+        "ChenLiP": "Assistant Professor, University of Gothenburg, Sweden. Research field: market design and industrial organization. PhD, Centre for Advanced Studies in European Economics and Statistics, Vrije Universiteit Brussels.",
+        "WangJieP": "Assistant Professor, Tongji University, China. Research Field: computer networks, mobile computing, and big data. Ph.D. in Computer Engineering, North Carolina State University, Raleigh, U.S.",
+        "more": "more"
+    },
+    "intelligence": {
+        "course":"course",
+        "PatentPledge": "PatentPledge",
+        "TOP2500RD": "TOP 2500 R&D",
+        "download": "download"
+    },
+    "economic":{
+        "Top5List": "Top 5 List",
+        "Courses": "Courses",
+        "IPBox": "IP Box",
+        "OpenPatentLicensing" : "Open Patent Licensing",
+        "PatentOpposition" : "Patent Opposition"
+    },
+    "survey":{
+        "P1Q0": "Before the questionnaire, please type the Patent Application Number provided by our volunteer",
+        "patent name": "Patent Title",
+        "summary": "Abstract",
+        "NoSuchPatent": "No patent information found, please check the patent number.",
+
+        "P1Q1":"A01.confirm that you (your organization/company) are holding the following invention patent.",
+        "P1Q1A1":"Yes, we are still holding this patent",
+        "P1Q1A2":"Yes, we have got the grant of the patent but will not pay the patent fees",
+        "P1Q1A3":"No, I am not the holder of the patent",
+
+        "search":"Please provide your basic information, we will recommend another patent for the questionnaire",
+        
+        "P1Q2": "A02.Gender ",
+        "P1Q2A1": "1) Female",
+        "P1Q2A2": "2) Male",
+
+
+        "P1Q3": "A03. What is (are) the discipline(s) of your degree?",
+        "P1Q3Row":["Bachelor","Master","Ph.D."],
+        "P1Q3Col":["Law","Business, Economics, or Management","Other Social Sciences","Math, Physics or Engineering","Biology, Medicine, and Other Life Sciences","Others, please specify____________"],
+
+
+        "P1Q4": "A04. Do you have the following professional certification? (choose all that applies) ",
+        "P1Q4A1": "Patent Agency Qualification Certification ",
+        "P1Q4A2": "Lawyer’s Qualification Certification",
+        "P1Q4A3": "Certified Public Accountant (CPA)",
+        "P1Q4A4": "Chartered Financial Analyst (CFA) ",
+        "P1Q4A5": "Project Manager Certification ",
+        "P1Q4A6": "oOther, Please specify: __________ ",
+
+    
+        "P1Q5": "A05. In 2024, what is the type of your parent organization/company?",
+        "P1Q5A1":"(a) University/Public Research Organization ",
+        "P1Q5A2":"(b) Hospital/Other Public Organization ",
+        "P1Q5A3":"(c) Spin-off from the University/Public Research Organization",
+        "P1Q5A4":"(d) Foreign-funded subsidiary/Foreign-invested enterprise",
+        "P1Q5A5":"(e) China’s Listed company",
+        "P1Q5A6":"(f) China’s Large Private Enterprise but not publicly listed (w 1000+ employees)",
+        "P1Q5A7":"(g) Small and Medium-sized Private Enterprise",
+        "P1Q5A8":"(h) Start-up",
+        "P1Q5A9":"(i) Family-Owned Enterprise",
+        
+        
+        "P1Q6": "A06. In which year was your company established?  __________",
+        "P1Q6Row":["Head Office","Shanghai Office"],
+        "P1Q6Col":["Before 1990s","1990-1995","1996-2000","2001-2005","2005-2010","2011-2015","2016-2020","After 2020"],
+
+
+        "P1Q7":"A07. Please choose the primary industry for your organization/company (ISIC) ",
+        "P1Q7A1":"Agriculture, forestry and fishing",
+        "P1Q7A2":"Mining and quarrying",
+        "P1Q7A3":"Manufacturing",
+        "P1Q7A4":"Electricity, gas, steam and air conditioning supply",
+        "P1Q7A5":"Water supply; sewerage, waste management and remediation activities",
+        "P1Q7A6":"Construction",
+        "P1Q7A7":"Wholesale and retail trade; repair of motor vehicles and motorcycles",
+        "P1Q7A8":"Transportation and storage",
+        "P1Q7A9":"Accommodation and food service activities",
+        "P1Q7A10":"Information and communication",
+        "P1Q7A11":"Financial and insurance activities",
+        "P1Q7A12":"Real estate activities",
+        "P1Q7A13":"Administrative and support service activities",
+        "P1Q7A14":"Public administration and defence; compulsory social security",
+        "P1Q7A15":"Education",
+        "P1Q7A16":"Human health and social work activities",
+        "P1Q7A17":"Arts, entertainment and recreation",
+        "P1Q7A18":"Other service activities",
+        "P1Q7A19":"Activities of households as employers; undifferentiated goods- and services-producing activities of households for own use",
+        "P1Q7A20":"Activities of extraterritorial organizations and bodies",
+
+
+        "P1Q8":"A08. Does your organization/company directly manufacture the patented technology?  ",
+        "P1Q8A1":"Yes, we produced goods",
+        "P1Q8A2":"No, we only do the R&D",
+
+        "P1Q9":"A09. If yes, in which geographic market did your company/organization sell goods or services during the last three years (2020-2023)?",
+        "P1Q9A1":"Mainly Local in Shanghai ",
+        "P1Q9A2":"oNational ",
+        "P1Q9A3":"oNorth America ",
+        "P1Q9A4":"Europe (Y/N)",
+        "P1Q9A5":"Others (please specify)",
+
+
+        "P1Q10":"A10. If no, does your organization/company have a collaborated manufacturer in the past three years?",
+        "P1Q10A1":"Yes, we have some stable collaborated manufacturer",
+        "P1Q10A2":"Yes, but we change the manufacturer many times",
+        "P1Q10A3":"(c)No, we don’t need collaborated manufacturer",
+
+        "P1Q11":"A11. Does your organization/company take the direct ownership or rely the external suppliers?",
+        "P1Q11Row":["Highly integration","70 % self-produce","Half- half","70% out sourcing","Completely out-sourcing"],
+        "P1Q11Col":["Raw material","R&D","IP management","IT system","Production","Distribution","Retail"],
+
+
+
+        "P1Q12":"A12. What is the amount of gross R&D investment in your organization/company in 2023? ",
+        "P1Q12A1":"(a) <100,000 RMB",
+        "P1Q12A2":"(b) 100,000-500,000 RMB ",
+        "P1Q12A3":"(c) 500,000-1,000,000 RMB ",
+        "P1Q12A4":"(d) 1,000,000+ RMB",
+
+        "P1Q13":"A13 How do you evaluate the level of expertise in your organization/company?",
+        "P1Q13Row":["Yes","No","Don't know"],
+        "P1Q13Col":["Have a fully dedicated staff or department for patent or IP related issues","Have a stable collaborated agency to handle the IP related issues","Have a clear internal guideline on IP management","Have a clear incentive mechanism to awarded IP commercialization","Provide access to the patent or IP database"],
+
+
+        "P1Q14":"A14. How many years have you been working full-time?",
+        "P1Q14A1":"(a) less than 3 years",
+        "P1Q14A2":"(b) 3-6 years ",
+        "P1Q14A3":"(c) 6-10 years",
+        "P1Q14A4":" (d) 10-20 years ",
+        "P1Q14A5":" (e) more than 20 years ",
+
+        "P1Q15":"A15. How many years have you worked in the current organization/company? ",
+        "P1Q15A1":"(a) less than 3 years ",
+        "P1Q15A2":"(b) 3-6 years ",
+        "P1Q15A3":"(c) 6-10 years ",
+        "P1Q15A4":"(d) 10-20 years",
+        "P1Q15A5":"(e) more than 20 years ",
+
+        "P1Q16":"A16. Do you have work experience in the R&D department? ",
+        "P1Q16A1":"Yes",
+        "P1Q16A2":"No",
+
+        "P1Q17":"A17. What is your current position?(choose all that applies) ",
+        "P1Q17A1":"Founder/General Manager ",
+        "P1Q17A2":"Lawyer",
+        "P1Q17A3":"Patent Attorney",
+        "P1Q17A4":"Patent Examiner",
+        "P1Q17A5":"R&D staff",
+        "P1Q17A6":"Work in the administration department (e.g. finance, human resource,....)",
+        "P1Q17A7":"Other, please specify",
+
+
+        "P1Q18":"A18. What is your last job position? ",
+        "P1Q18Row":["Same company","Other company","University/PROs","Other (fill in)"],
+        "P1Q18Col":["Student","Patent lawyer/Attorney","Patent Examiner","R&D department","Administration department","General manager","others"],
+
+        "P1Q19":"A19. What is your expected annual income trend over the next several years? ",
+        "P1Q19A1":"(a) Stay about the same ",
+        "P1Q19A2":"(b) Grow moderately ",
+        "P1Q19A3":"(c) Grow substantially ",
+        "P1Q19A4":"(d) Decrease moderately ",
+        "P1Q19A5":"(e) Decrease substantially ",
+        
+        
+        "P2Q1": "B01.You are ___ (relationship with the focal patent) ",
+        "P2Q1A1":"(a) inventor of the patent",
+        "P2Q1A2":"(b) applicant of the patent ",
+        "P2Q1A3":"(c) lawyer/attorney who was in charge of managing the focal patent",
+        "P2Q1A4":"(d) general manager in the focal company/organization that holds the patent ",
+
+
+        "P2Q2":"B02. What is the marketing stage of the patented technology? ",
+        "P2Q2A1":"(a) Has entered the market",
+        "P2Q2A2":"(b) in preparation for market introduction ",
+        "P2Q2A3":"(c) far before ready to market ",
+        "P2Q2A4":"(d) Out of the market ",
+        "P2Q2A5":"(e)The patented technology is used to improve the production/distribution/marketing process to reduce the cost",
+
+        
+        "P2Q3": "B03. If the related product has entered the market, how would you evaluate the market position of your product?",
+        "P2Q3A1":"(a) less than 5% of the total market share (sales)",
+        "P2Q3A2":"(b) 5%-20% of the total market share (sales)",
+        "P2Q3A3":"(c) 20%-50% of the total market share (sales)",
+        "P2Q3A4":"(d) more than 50% of the total market share (sales)",
+
+
+
+        "P2Q4": "B04. How percentage of the patented technology reduce the cost? ",
+        "P2Q4A1": "(a) less than 5%",
+        "P2Q4A2": "(b) 5%-20%",
+        "P2Q4A3": "(c) 20%-50% ",
+        "P2Q4A4": "(d) more than 50%, breakthrough ",
+
+
+        "P2Q5": "B05. Does this patented technology improve the access of socially vulnerable groups to the following basic provisions? (Choose all options that apply)",
+        "P2Q5A1":"Quality good or drinkable water ",
+        "P2Q5A2":"Affordable quality housing ",
+        "P2Q5A3":"Quality energy or transportation",
+        "P2Q5A4":"Quality education or training",
+        "P2Q5A5":"Quality employment",
+        "P2Q5A6":"Quality (health)care",
+        "P2Q5A7":"Quality financial or legal services",
+        "P2Q5A8":"Other provisions, please specify",
+        "P2Q5A9":"None of the above",
+        
+        
+        "P2Q6": "B06. During the next three years, will your organization/company continue to develop the patented technology?",
+        "P2Q6A1":"(a) Yes",
+        "P2Q6A2":"(b) Yes, but reduce the relevant investment",
+        "P2Q6A3":"(c) No",
+
+
+        "P2Q7": "B07. if yes, How important are the following motives for developing the patented technology in the past three years?",
+        "P2Q7Col":["Very High","High","Medium","Low","Irrelevant"],
+        "P2Q7Row":["The potential turnover and/or profit from these innovations","Potential cost reductions for the product process","Potential cost reductions for the distribution/marketing process","An existing or expected demand/interest from investors (there is uncertainty with the market demand, but may contribution to the financing from the investors)","Availability of grants, subsidies, or other public incentives","The societal vision of your organization(e.g.? environment related innovation?)","Voluntary codes of conduct in your sector aiming to stimulate tackling societal challenges(e.g.??)","Other factors, please specify "],
+
+
+
+        "P2Q8": "B08. if reduce or no, how important are the following factors in hampering your continued innovation?",
+        "P2Q8Col":["Very High","High","Medium","Low","Irrelevant"],
+        "P2Q8Row":["Increasing production/material cost","Increasing R&D cost, such as labor cost","Lack of skilled employees ","Cash- flow problems","Deviate from the core strategy of the institute/company ","Decrease in order quantity","S&T, Tax,IP  or Industry Policy changes"],
+
+
+        "P2Q9":"B09. Who developed the patent-related technology?",
+        "P2Q9A1":"(a) In-house at your organization",
+        "P2Q9A2":"(b) Joint work with other companies",
+        "P2Q9A3":"(c) Joint work with other universities/PROs",
+        "P2Q9A4":"(c) In-house modification of products developed by other organizations",
+        "P2Q9A5":"(d) Completely out-sourcing to other organizations",
+
+        "P2Q10":"B10. In the past three years, did your organization/company purchase any patent/patented technology?",
+        "P2Q10A1":"Yes, we have purchased patent licensing from foreign companies",
+        "P2Q10A2":"Yes, we have purchased patent licensing from another Chinese companies",
+        "P2Q10A3":"Yes, we have purchased patent licensing from a university/PROs",
+        "P2Q10A4":"No",
+
+        "P2Q11":"B11. What is your estimate on the financial value of the patent? (in RMB)",
+        "P2Q11A1":"(a) <10,000 RMB",
+        "P2Q11A2":"(b) 10,000 - 100,000 RMB",
+        "P2Q11A3":"(c) 100,000 -500,000 RMB",
+        "P2Q11A4":"(d) 500,000 – 1000,000 RMB",
+        "P2Q11A5":"(e) 1000,000 – 5000,000 RMB",
+        "P2Q11A6":"(f) >5000,000 RMB",
+
+        "P2Q12":"B12. How would you value the following functions of the focal patent ?",
+        "P2Q12Col":["Very High","High","Medium","Low","Not important"],
+        "P2Q12Row":["Preventing imitation","Licensing/Commercialization Revenue"," Freedom to operate","Forming the basis of a technology standard ","Secure financing","Building a high-technology image of the institute","Others (please specify)"],
+
+
+        "P2Q13":"B13. Do you plan to/have you license(d) out this patent/patented technology?",
+        "P2Q13A1":"(a) Yes, we have a license contract on this patent/patented technology",
+        "P2Q13A2":"(b)Yes, we are planning to license out this patent/patented technology",
+        "P2Q13A3":"(c) No, we will not license out this patent/patented technology",
+
+        "P2Q14":"B14. If yes, Why do(have) you license out this patent/patented technology?",
+        "P2Q14A1":"To get the licensing revenue",
+        "P2Q14A2":"Enabling market access",
+        "P2Q14A3":"Joint Innovation",
+        "P2Q14A4":"Out-sourcing manufacturing",
+        "P2Q14A5":"Settle the infringements",
+
+        "P2Q15":"B15. What kind of licensing and pricing you plan to use/have used?",
+        "P2Q15Col":["to the supplier/manufacturer","To the direct competitor","To the party not active in your business area"],
+        "P2Q15Row":["Open for free","Cross-licensing","lump-sum payment ","free with negotiated royalties","30%-50% value as upfront lump-sum payment, plus negotiated royalties","Not sure about the pricing"],
+
+        "P2Q16":"B16. If not, how important are the following factors in hampering your license the patent?",
+        "P2Q16Col":["Very High","High","Medium","Low","Not important"],
+        "P2Q16Row":["The patented technology is still in development","Insufficient commercial potential","Lack of contract skill","Risk of creating a competitor","Unsatisfactory IP protection","Potential high cost of the follow-up technical support"],
+
+
+        "P2Q17":"B17. Do you think the following incentives are useful for you to make an effort on IP commercialization?",
+        "P2Q17Col":["Very high","High","Medium","Low","None"],
+        "P2Q17Row":["Condition for promotion","Lump-sum cash bonus when the licensing contract has been signed","Commission based on the licensing revenue","Stock equity of the company","Other (please specify)"],
+
+
+
+        "P2Q18":"B18. Except patent, how important is the other intellectual property rights for the focal patent/products?",
+        "P2Q18Col":["Very Important","Important","so-so","Not important","Costly"],
+        "P2Q18Row":["Trademark","Trade Secret","Copyright","Geographical Indication","Data"],
+
+
+
+        "P3Q1": "C01. Please evaluate the current IP environment in China from the following perspectives",
+        "P3Q1Col":["Very good","good","So-so","Not good","Very bad"],
+        "P3Q1Row":["Patent examination efficiency","Digitalization of public service in the patent application process","Digitalization of the public service in the patent enforcement process","Access to patent database ","Reasonable cost to get patent protection (e.g. patent application fees, renew fees, patent attorney fees...)","Reasonable cost to enforce the patent (e.g. Expense in patent litigation, lawyer fees)  ","Strength of the patent protection","Equal treatment of the patent examination decisions","Eual treatment of the patent infringement decisions "],
+
+        "P3Q2": "C02. Do you agree that the following activities benefit the following innovation?",
+        "P3Q2Col":["Very good","good","So-so","Not good","Very bad"],
+        "P3Q2Row":["Patent licensing in general","Open patent by private company, such as Tesla","Patent Pool managed by International organization, such as the Medicines Patent Pool","The Patent linkage system","Declare a Standard Essential Patent"],
+
+        "P3Q3": "C03. Do you think the following government support is important for the patent commercialization?",
+        "P3Q3Col":["Very Important","Important","so-so","Not Important","Counteractive"],
+        "P3Q3Row":["Organize IP training/workshop","Guide the Patent Pool generation","Award the high value patents","Provide subsidies/fee reduction on patent application","Provide subsidies/fee reduction on renewal fees","Reimbursements/Subsides for legal/agent service","Provide public service on patent evaluation","Provide public service on searching and matching potential licensee/buyer","Guide the licensing contract","Tax reduction for patent licensing revenue"]
+
+
+    }
+}

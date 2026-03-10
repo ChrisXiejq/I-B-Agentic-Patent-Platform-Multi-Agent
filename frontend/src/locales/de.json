@@ -1,0 +1,43 @@
+{
+    "topnav": {
+        "language": "language",
+        "English": "English",
+        "Chinese": "Chinese",
+        "German": "German",
+        "OpenLicensingPlatform": "OpenLicensingPlatform",
+        "Team": "Team",
+        "News": "News",
+        "IP_Economics": "IP Economics",
+        "IP_Intelligence": "IP Intelligence",
+        "Patent_Value_Survey": "Patent Value Survey",
+        "menu":"menu"
+    },
+    "team": {
+        "LiuXia1": "Liu Xia",
+        "LiuXia2": "刘夏",
+        "WangXiaolu1": "Wang Xiaolu",
+        "WangXiaolu2": "王晓璐",
+        "ChenLi1": "Chen Li",
+        "ChenLi2": "陈栗",
+        "WangJie1": "Wang Jie",
+        "WangJie2": "王洁",
+        "LiuXiaP": "Assistenzprofessorin, Tongji-Universität, Shanghai International College of Intellectual Property. Gastwissenschaftlerin, Zhejiang Universität. School of Management, Co-Leiterin des Forschungszentrums f ü r Recht und Ökomomie der ETH Z ü rich, Schweiz. Forschungsgebiet: Unternehmensstrategie f ü r geistiges Schutzrechtsstrategie, Schutzrechtssystem und Wettbewerbspolitik.",
+        "WangXiaoluP": "Assistenzprofessorin, Tongji-Universität, Shanghai International College of Intellectual Property. Gastwissenschaftlerin, Zhejiang Universität. School of Management, Co-Leiterin des Forschungszentrums f ü r Recht und Ökomomie der ETH Z ü rich, Schweiz. Forschungsgebiet: Unternehmensstrategie f ü r geistiges Schutzrechtsstrategie, Schutzrechtssystem und Wettbewerbspolitik.",
+        "ChenLiP": "Assistenzprofessorin, Universität Göteborg, Schweden. Forschungsgebiet: Marktdesign und industrielle Organisation. PhD, Zentrum für fortgeschrittene Studien in europäischer Wirtschaft und Statistik, Vrije Universität Brüssel",
+        "WangJieP": "Assistenzprofessorin, Fakultät für Software, Tongji-Universität. Forschungsgebiet: Modellierung und Leistungs Bewertung von Netzwerksystemen, Mobile/Edge Computing. PhD, Fakultät für Elektrotechnik und Computertechnik der North Carolina State University. Shanghai bei Huawei Technology Co., LTD. und Ericsson (China) Communication Co., LTD. gearbeitet.",
+        "more": "mehr"
+    },
+    "intelligence": {
+        "course":"course",
+        "PatentPledge": "PatentPledge",
+        "TOP2500RD": "TOP2500R&D",
+        "download": "download"
+    },
+    "economic":{
+        "Top5List": "Top 5 List",
+        "Courses": "Courses",
+        "IPBox": "IP Box",
+        "OpenPatentLicensing" : "Open Patent Licensing",
+        "PatentOpposition" : "Patent Opposition"
+    }
+}

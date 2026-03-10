@@ -1,0 +1,146 @@
+spring:
+  application:
+    name: backend
+  profiles:
+    active: local
+  # 业务数据源（MySQL）
+  datasource:
+    url: jdbc:mysql://49.235.179.94/ib
+    username: ib
+    password: AMEftwWK2cakz5Nh
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    # Redis（本地可用 host/port，云端推荐 Upstash：使用 spring.data.redis.url）
+    redis:
+      url: "${REDIS_URL:redis://49.235.179.94:6379/0}"
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  # Spring AI 配置（Gemini + OpenAI）
+  ai:
+    model:
+      chat: google-genai
+      embedding: openai
+    # Google Gemini 2.5 Flash
+    google:
+      genai:
+        api-key: "${GOOGLE_AI_API_KEY:}"
+        chat:
+          options:
+            model: gemini-2.5-flash
+    # OpenAI（Embedding text-embedding-3-small，1536 维）
+    openai:
+      api-key: "${OPENAI_API_KEY:}"
+      embedding:
+        options:
+          model: text-embedding-3-small
+    # 临时注释掉，便于开发调试和部署（实际需要启动 MCP 服务）
+    # mcp:
+    #   client:
+    #     sse:
+    #       connections:
+    #         server1:
+    #           url: http://localhost:8127
+    #     stdio:
+    #       servers-configuration: classpath:mcp-servers.json
+    # PgVector（Supabase PostgreSQL）
+    vectorstore:
+       pgvector:
+         url: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
+         username: "postgres.sdxlcukvwjxlqyssidzc"
+         password: "${SUPABASE_DB_PASSWORD:xjq1186558900}"
+         index-type: HNSW
+         dimensions: 1536
+         distance-type: COSINE_DISTANCE
+         max-document-batch-size: 10000
+    # Banned words (English). Request is rejected if user input contains any; check is case-insensitive.
+    banned-words:
+      # spam / lead-gen
+      - "add wechat"
+      - "add my qq"
+      - "fake invoice"
+      - "click farming"
+      - "fake certificate"
+      # illegal
+      - "gambling"
+      - "pyramid scheme"
+      - "terrorism"
+      # scam
+      - "you have won"
+      - "click to claim prize"
+      - "free prize"
+      # profanity / abuse (expand as needed)
+      - "damn you"
+      - "go die"
+
+server:
+  port: 8190
+  servlet:
+    context-path: /api
+
+# springdoc-openapi config
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  tags-sorter: alpha
+  operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: default
+      paths-to-match: '/**'
+      packages-to-scan: com.inovationbehavior.backend.controller
+
+# knife4j config
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+
+# AI 与 Agent 配置
+app:
+  ai:
+    # Banned words (English). Request is rejected if user input contains any; check is case-insensitive.
+    banned-words:
+      # spam / lead-gen
+      - "add wechat"
+      - "add my qq"
+      - "fake invoice"
+      - "click farming"
+      - "fake certificate"
+      # illegal
+      - "gambling"
+      - "pyramid scheme"
+      - "terrorism"
+      # scam
+      - "you have won"
+      - "click to claim prize"
+      - "free prize"
+      # profanity / abuse (expand as needed)
+      - "damn you"
+      - "go die"
+    # Reject message when a banned word is hit (optional)
+    # banned-words-reject-message: "Your input contains inappropriate content. Please revise and try again."
+  # 多路召回 RAG 配置（向量检索 pgvector + BM25 关键词检索 → RRF 融合 → Rerank）
+  rag:
+    # 文档目录（支持 classpath 和 file 路径，递归加载所有 .md）
+    documents:
+#      path: "classpath*:documents/**/*.md"
+    # 文档分块（LangChain4j DocumentSplitters.recursive）
+    splitter:
+      chunk-size: 800      # 每块最大字符数
+      chunk-overlap: 150   # 块间重叠字符数
+    hybrid:
+      vector-top-k: 8    # 向量检索 top-k
+      bm25-top-k: 8      # BM25 检索 top-k
+      final-top-k: 6     # RRF 融合后 rerank 保留的 top-k
+
+# searchAPI（若使用搜索 API，在此填写 key）
+# search-api:
+#   api-key: 你的 API Key
+
+# 修改日志级别，查看 Spring AI 更多调用细节
+logging:
+  level:
+    org.springframework.ai: DEBUG

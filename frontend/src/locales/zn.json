@@ -1,0 +1,52 @@
+{
+    "topnav": {
+        "language": "文/A",
+        "English": "English",
+        "Chinese": "Chinese",
+        "German": "German",
+        "OpenLicensingPlatform": "专利许可交易平台",
+        "Team": "团队介绍",
+        "News": "新闻",
+        "IP_Economics": "知识产权经济",
+        "IP_Intelligence": "知识产权数智",
+        "Patent_Value_Survey": "开放专利与创新调查",
+        "Home":"首页",
+        "menu":"菜单",
+        "Survey_Method": "调查方法",
+        "Survey_Fill": "问卷填写",
+        "Survey_Results": "调查结果",
+        "Survey_Utils": "样本专利权人检索",
+        "DataUsageInstructions": "数据使用说明"
+    },
+    "team": {
+        "LiuXia2": "Liu Xia",
+        "LiuXia1": "刘夏",
+        "WangXiaolu2": "Wang Xiaolu",
+        "WangXiaolu1": "王晓璐",
+        "DietmarHarhoff2": "Dietmar Harhoff",
+        "DietmarHarhoff1": "Dietmar Harhoff",
+        "WangJie2": "Wang Jie",
+        "WangJie1": "王洁",
+        "LiuXiaP": "同济大学上海国际知识产权学院助理教授，浙江大学管理学院管理工程系访问学者、瑞士苏黎世联邦理工法经济学研究中心合作导师。企业知识产权战略、知识产权制度与竞争政策研究方向。",
+        "WangXiaoluP": "马萨诸塞大学阿姆赫斯特分校助理教授，德国马克斯普朗克创新与竞争研究所研究员，加拿大卫生经济学中心教员助理。医疗保健市场创新和数字化经济学研究方向。美国纽约州伊萨卡市康奈尔大学获经济学博士。",
+        "ChenLiP": "瑞典哥德堡大学助理教授。市场设计和产业组织研究方向。布鲁塞尔自由大学欧洲经济与统计高级研究中心博士。",
+        "WangJieP": "同济大学软件学院助理教授。网络系统的建模与性能评估、移动/边缘计算研究方向。美国北卡罗莱纳州立大学电子与计算机工程学院博士学位。上海华为科技有限公司、爱立信（中国）通信有限公司工作任职。",
+        "more": "more"
+    },
+    "intelligence": {
+        "course":"课程",
+        "PatentPledge": "专利质押",
+        "TOP2500RD": "TOP2500R&D",
+        "download": "下载原文"
+    },
+    "economic":{
+        "Top5List": "经济学TOP5议题一览",
+        "Courses": "课程",
+        "IPBox": "专利盒",
+        "OpenPatentLicensing" : "专利开放许可",
+        "PatentOpposition" : "专利异议"
+    },
+    "survey":{
+
+    }
+}
