@@ -5,9 +5,9 @@ spring:
     active: local
   # 业务数据源（MySQL）
   datasource:
-    url: jdbc:mysql://49.235.179.94/ib
-    username: ib
-    password: AMEftwWK2cakz5Nh
+    url: ${MYSQL_URL:jdbc:mysql://localhost:3306/ib}
+    username: ${MYSQL_USERNAME:ib}
+    password: ${MYSQL_PASSWORD:}
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     # Redis（本地可用 host/port，云端推荐 Upstash：使用 spring.data.redis.url）
@@ -47,9 +47,9 @@ spring:
     # PgVector（Supabase PostgreSQL）
     vectorstore:
        pgvector:
-         url: "jdbc:postgresql://aws-1-eu-west-1.pooler.supabase.com:5432/postgres"
-         username: "postgres.sdxlcukvwjxlqyssidzc"
-         password: "${SUPABASE_DB_PASSWORD:xjq1186558900}"
+         url: ${SUPABASE_DB_URL:jdbc:postgresql://localhost:5432/postgres}
+         username: ${SUPABASE_DB_USERNAME:postgres}
+         password: ${SUPABASE_DB_PASSWORD:}
          index-type: HNSW
          dimensions: 1536
          distance-type: COSINE_DISTANCE
