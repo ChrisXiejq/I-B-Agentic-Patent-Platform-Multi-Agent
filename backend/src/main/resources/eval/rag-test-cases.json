@@ -1,0 +1,87 @@
+[
+  {
+    "query": "What is patent commercialisation?",
+    "expectedSourceSubstrings": ["01-Basic-Concepts", "Patent-Commercialisation"],
+    "referenceAnswer": "Patent commercialisation is the process of bringing patented technology from the laboratory to the market, encompassing implementation, licensing, assignment, equity participation, and other forms of exploitation."
+  },
+  {
+    "query": "专利商业化的主要阶段有哪些？",
+    "expectedSourceSubstrings": ["01-Basic-Concepts", "Patent-Commercialisation"],
+    "referenceAnswer": "Screening and valuation, market matching, deal negotiation, rights transfer, implementation, post-deal management."
+  },
+  {
+    "query": "What value does patent commercialisation create?",
+    "expectedSourceSubstrings": ["01-Basic-Concepts", "Patent-Commercialisation"],
+    "referenceAnswer": "Economic value (licensing income, sales), industrial value, social value, innovation ecosystem value."
+  },
+  {
+    "query": "What is the policy framework for patent commercialisation in the EU?",
+    "expectedSourceSubstrings": ["01-Basic-Concepts", "Patent-Commercialisation"],
+    "referenceAnswer": "Horizon Europe, IP strategies, national innovation policies, IP Helpdesk, Horizon IP Scan."
+  },
+  {
+    "query": "What share of European inventions come from universities?",
+    "expectedSourceSubstrings": ["02-University-Patent", "University-Patent-Transfer"],
+    "referenceAnswer": "Universities and PROs generate over 10% of all European patent applications filed at the EPO."
+  },
+  {
+    "query": "How do European universities prefer to commercialise their patents?",
+    "expectedSourceSubstrings": ["02-University-Patent", "University-Patent-Transfer"],
+    "referenceAnswer": "Licensing (about 70%), R&D cooperation (14%), patent sales (9%)."
+  },
+  {
+    "query": "What is the role of Technology Transfer Offices (TTOs) in Europe?",
+    "expectedSourceSubstrings": ["02-University-Patent", "University-Patent-Transfer"],
+    "referenceAnswer": "Manage IP portfolios, support licensing and spin-offs, connect researchers with industry; ASTP, European TTO Circle."
+  },
+  {
+    "query": "What challenges do European university patent transfers face?",
+    "expectedSourceSubstrings": ["02-University-Patent", "University-Patent-Transfer"],
+    "referenceAnswer": "Fragmentation, national systems, limited cross-border linkages, institutional differences, valuation capacity."
+  },
+  {
+    "query": "What is the European Patent Office (EPO)?",
+    "expectedSourceSubstrings": ["03-European-Patent", "European-Patent-System", "EPO"],
+    "referenceAnswer": "Executive body of the European Patent Organisation; grants European patents through a single application for up to 39 countries."
+  },
+  {
+    "query": "How does the European patent application process work?",
+    "expectedSourceSubstrings": ["03-European-Patent", "European-Patent-System", "EPO"],
+    "referenceAnswer": "Single application at EPO, search and publication, substantive examination, grant, then national validation or Unitary Patent."
+  },
+  {
+    "query": "What patent information and tools does the EPO provide for commercialisation?",
+    "expectedSourceSubstrings": ["03-European-Patent", "European-Patent-System", "EPO"],
+    "referenceAnswer": "Espacenet, Patent Register, Patent Analytics, studies on commercialisation and innovation."
+  },
+  {
+    "query": "What is the relationship between the EPO and the Unitary Patent?",
+    "expectedSourceSubstrings": ["03-European-Patent", "European-Patent-System", "EPO"],
+    "referenceAnswer": "The EPO administers the Unitary Patent system; unitary effect from 1 June 2023; EPO maintains register and collects renewal fees."
+  },
+  {
+    "query": "What is the Unitary Patent?",
+    "expectedSourceSubstrings": ["04-Unitary-Patent", "Unified-Patent-Court"],
+    "referenceAnswer": "Uniform protection across participating EU Member States via single registration at EPO; one renewal fee in euro."
+  },
+  {
+    "query": "When did the Unitary Patent system start and how is it performing?",
+    "expectedSourceSubstrings": ["04-Unitary-Patent", "Unified-Patent-Court"],
+    "referenceAnswer": "Started 1 June 2023; over 48,000 unitary patents by Feb 2025; over 700 UPC cases; strong SME uptake."
+  },
+  {
+    "query": "Which countries participate in the Unitary Patent system?",
+    "expectedSourceSubstrings": ["04-Unitary-Patent", "Unified-Patent-Court"],
+    "referenceAnswer": "18 EU Member States: Austria, Belgium, Bulgaria, Denmark, Estonia, Finland, France, Germany, Italy, Latvia, Lithuania, Luxembourg, Malta, Netherlands, Portugal, Romania, Slovenia, Sweden."
+  },
+  {
+    "query": "What is the Unified Patent Court (UPC)?",
+    "expectedSourceSubstrings": ["04-Unitary-Patent", "Unified-Patent-Court"],
+    "referenceAnswer": "Specialised court for European patents in participating states; exclusive competence for infringement and validity; single proceeding for multiple countries."
+  },
+  {
+    "query": "How does the Unitary Patent benefit patent commercialisation?",
+    "expectedSourceSubstrings": ["04-Unitary-Patent", "Unified-Patent-Court"],
+    "referenceAnswer": "Lower costs, simpler administration, clearer enforcement via UPC, broader market coverage, easier licensing."
+  }
+]

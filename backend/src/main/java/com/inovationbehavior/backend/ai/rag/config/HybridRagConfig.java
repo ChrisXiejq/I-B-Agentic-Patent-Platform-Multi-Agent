@@ -1,5 +1,10 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.config;
 
+import com.inovationbehavior.backend.ai.rag.document.RagDocumentCorpus;
+import com.inovationbehavior.backend.ai.rag.postretrieval.EmbeddingReranker;
+import com.inovationbehavior.backend.ai.rag.preretrieval.ContextualQueryAugmenterFactory;
+import com.inovationbehavior.backend.ai.rag.retrieval.BM25DocumentRetriever;
+import com.inovationbehavior.backend.ai.rag.retrieval.HybridDocumentRetriever;
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -13,7 +18,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * 多路召回 RAG 配置：向量检索（pgvector）+ BM25 关键词检索（内存倒排）→ RRF 融合 → Rerank
+ * RAG 总配置：多路召回（向量 + BM25）→ RRF 融合 → Rerank，并组装 RetrievalAugmentationAdvisor
  */
 @Configuration
 public class HybridRagConfig {

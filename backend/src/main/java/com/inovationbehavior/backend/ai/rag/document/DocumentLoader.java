@@ -1,10 +1,11 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.document;
 
 import cn.hutool.crypto.digest.DigestUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.reader.markdown.MarkdownDocumentReader;
 import org.springframework.ai.reader.markdown.config.MarkdownDocumentReaderConfig;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.ResourcePatternResolver;
@@ -17,27 +18,26 @@ import java.util.Map;
 
 /**
  * RAG 文档加载器：从 documents 目录加载所有 .md 文档，
- * 使用 LangChain4j DocumentSplitters.recursive() 进行分块（段落→行→句→词→字符 + overlap）。
- * 分块结果供 pgvector 向量库和 BM25 内存倒排索引共用。
+ * 使用可配置分块策略（递归字符切分 或 语义切分+Token 回退），分块结果供 pgvector 与 BM25 共用。
  */
 @Component
 @Slf4j
 public class DocumentLoader {
 
     private final ResourcePatternResolver resourcePatternResolver;
-    private final LangChain4jRecursiveSplitter splitter;
+    private final ChunkSplitter splitter;
 
     @Value("${app.rag.documents.path:classpath*:documents/**/*.md}")
     private String documentsPath;
 
     public DocumentLoader(ResourcePatternResolver resourcePatternResolver,
-                          LangChain4jRecursiveSplitter splitter) {
+                          @Qualifier("chunkSplitter") ChunkSplitter splitter) {
         this.resourcePatternResolver = resourcePatternResolver;
         this.splitter = splitter;
     }
 
     /**
-     * 加载 documents 目录下所有 .md 文件，经 LangChain4j 递归分块，返回块级 Document 列表。
+     * 加载 documents 目录下所有 .md 文件，经分块后返回块级 Document 列表。
      * 该列表将同时写入 pgvector 和用于 BM25 倒排索引。
      */
     public List<Document> loadDocumentsForRag() {

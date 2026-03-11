@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.preretrieval;
 
 import jakarta.annotation.Resource;
 import org.springframework.ai.chat.model.ChatModel;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
- * 基于 AI 的文档元信息增强器（为文档补充元信息）
+ * 检索前：基于 AI 的文档元信息增强器（为文档补充元信息）
  */
 @Component
 public class MyKeywordEnricher {
@@ -19,6 +19,6 @@ public class MyKeywordEnricher {
 
     public List<Document> enrichDocuments(List<Document> documents) {
         KeywordMetadataEnricher keywordMetadataEnricher = new KeywordMetadataEnricher(genAIChatModel, 5);
-        return  keywordMetadataEnricher.apply(documents);
+        return keywordMetadataEnricher.apply(documents);
     }
 }

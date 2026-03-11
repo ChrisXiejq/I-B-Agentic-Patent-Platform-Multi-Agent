@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.document;
 
 import dev.langchain4j.data.document.DocumentSplitter;
 import dev.langchain4j.data.document.Metadata;
@@ -14,7 +14,7 @@ import java.util.Map;
  * 使用 LangChain4j 现成的 DocumentSplitters.recursive() 做递归分块（段落→行→句→词→字符 + overlap）。
  * 将 Spring AI 的 Document 转为 LangChain4j Document，分块后再转回 Spring AI Document。
  */
-public class LangChain4jRecursiveSplitter {
+public class LangChain4jRecursiveSplitter implements ChunkSplitter {
 
     private final DocumentSplitter splitter;
 
@@ -25,6 +25,7 @@ public class LangChain4jRecursiveSplitter {
     /**
      * 对 Spring AI Document 列表分块，返回块级 Spring AI Document 列表。
      */
+    @Override
     public List<Document> apply(List<Document> documents) {
         if (documents == null || documents.isEmpty()) return List.of();
 

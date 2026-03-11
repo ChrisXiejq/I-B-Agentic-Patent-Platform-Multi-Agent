@@ -122,19 +122,53 @@ app:
       - "go die"
     # Reject message when a banned word is hit (optional)
     # banned-words-reject-message: "Your input contains inappropriate content. Please revise and try again."
+  # 分层记忆（企业级）：短期=滑动窗口+摘要压缩+重要性衰减，长期=相似度+importance 阈值+NLI 控制写入
+  memory:
+    # 短期记忆：滑动窗口 + 摘要压缩
+    short-term:
+      window-size: 10             # 滑动窗口保留最近轮数
+      turns-to-compress: 5        # 窗口满时一次压缩的轮数
+      decay-factor-per-turn: 0.92 # importance 每轮衰减系数
+      summary-max-tokens: 300     # 摘要最大字数（LLM 压缩）
+    # 长期记忆：向量检索 + 入库策略
+    long-term:
+      top-k: 5
+      similarity-threshold: 0.5
+      importance-threshold: 0.25  # 低于此不写入长期
+      duplicate-similarity-threshold: 0.92  # 与已有记忆相似度高于此视为重复，不写入
+      nli-check-top-k: 3          # NLI 冲突检测时检索的相似条数
+    # 重要性评分（领域 NER 加权，可配置关键词）
+    importance:
+      patent-number-weight: 0.35
+      keyword-weight: 0.40
+      length-factor: 0.25
+      max-base-score: 1.0
+      # 逗号分隔关键词（留空则用代码默认：专利、许可、转让等）
+      keywords: "专利,许可,转让,商业化,价值评估,专利号,检索,侵权,权利要求,技术方案"
   # 多路召回 RAG 配置（向量检索 pgvector + BM25 关键词检索 → RRF 融合 → Rerank）
   rag:
     # 文档目录（支持 classpath 和 file 路径，递归加载所有 .md）
     documents:
 #      path: "classpath*:documents/**/*.md"
-    # 文档分块（LangChain4j DocumentSplitters.recursive）
+    # 文档分块：递归字符切分（默认） 或 语义切分+Token 回退
     splitter:
-      chunk-size: 800      # 每块最大字符数
-      chunk-overlap: 150   # 块间重叠字符数
+      chunk-size: 800           # 递归切分：每块最大字符数
+      chunk-overlap: 150        # 递归切分：块间重叠字符数
+      use-semantic: true       # true=语义切分+Token回退，false=递归切分
+      max-chunk-tokens: 400     # 语义切分：每块最大 token 数（约等于 embedding 单块上限）
+      overlap-tokens: 80        # 语义切分：块间重叠 token 数
     hybrid:
       vector-top-k: 8    # 向量检索 top-k
       bm25-top-k: 8      # BM25 检索 top-k
       final-top-k: 6     # RRF 融合后 rerank 保留的 top-k
+
+  # RAG/Agent 自动化评估（测试集路径、RAGAS 样本数等）
+  eval:
+    rag:
+      test-cases-location: "classpath*:eval/rag-test-cases.json"  # 测试用例 JSON 路径
+      max-faithfulness-samples: 5   # 旧版全量评估 Faithfulness 样本数
+      max-ragas-samples: 5         # RAGAS 评估最多样本数（每条约 4 次 LLM 调用，建议先设小值）
+      ragas-export-path: "target/ragas-eval-input.json"  # Java 导出供 Python ragas 读取的文件路径
 
 # searchAPI（若使用搜索 API，在此填写 key）
 # search-api:

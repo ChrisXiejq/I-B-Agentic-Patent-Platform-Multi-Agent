@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.retrieval;
 
 import org.springframework.ai.document.Document;
 
@@ -6,20 +6,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Reciprocal Rank Fusion (RRF) 融合多路召回结果
+ * 检索：Reciprocal Rank Fusion (RRF) 融合多路召回结果
  * RRF 公式: score(d) = sum_i 1 / (k + rank_i(d))，通常 k=60
  */
 public final class RrfFusion {
 
     public static final int DEFAULT_K = 60;
 
-    /**
-     * 对多路召回的文档列表按 RRF 分数融合并去重
-     *
-     * @param rankedLists 多路召回的文档列表（每路已按相关性排序）
-     * @param k           RRF 常数，默认 60
-     * @return 融合后按 RRF 分数降序排列的文档列表（去重，同一 Document 只保留一份）
-     */
     public static List<Document> fuse(List<List<Document>> rankedLists, int k) {
         if (rankedLists == null || rankedLists.isEmpty()) return List.of();
 
@@ -46,9 +39,6 @@ public final class RrfFusion {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 使用默认 k=60 进行融合
-     */
     public static List<Document> fuse(List<List<Document>> rankedLists) {
         return fuse(rankedLists, DEFAULT_K);
     }

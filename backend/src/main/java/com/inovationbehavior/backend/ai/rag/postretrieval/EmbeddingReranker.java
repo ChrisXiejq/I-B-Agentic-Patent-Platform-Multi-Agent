@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.postretrieval;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;
@@ -8,7 +8,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * 基于 Embedding 相似度的 Reranker：对融合后的文档按 query-document 相似度重新排序
+ * 检索后：基于 Embedding 相似度的 Reranker，对融合后的文档按 query-document 相似度重新排序
  */
 public class EmbeddingReranker {
 
@@ -20,9 +20,6 @@ public class EmbeddingReranker {
         this.topK = Math.max(1, topK);
     }
 
-    /**
-     * 对文档列表按 query-doc 相似度重排
-     */
     public List<Document> rerank(Query query, List<Document> documents) {
         if (documents == null || documents.isEmpty()) return List.of();
 
@@ -50,7 +47,6 @@ public class EmbeddingReranker {
                     .map(s -> s.doc)
                     .collect(Collectors.toList());
         } catch (Exception e) {
-            // 若 embedding 失败，返回原顺序
             return documents.stream().limit(topK).collect(Collectors.toList());
         }
     }

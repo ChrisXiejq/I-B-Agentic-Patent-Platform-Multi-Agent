@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.preretrieval;
 
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;
@@ -8,7 +8,7 @@ import org.springframework.ai.rag.preretrieval.query.transformation.RewriteQuery
 import org.springframework.stereotype.Component;
 
 /**
- * 查询重写器
+ * 检索前：查询重写器
  */
 @Component
 public class QueryRewriter {
@@ -17,23 +17,14 @@ public class QueryRewriter {
 
     public QueryRewriter(ChatModel genAIChatModel) {
         ChatClient.Builder builder = ChatClient.builder(genAIChatModel);
-        // 创建查询重写转换器
         queryTransformer = RewriteQueryTransformer.builder()
                 .chatClientBuilder(builder)
                 .build();
     }
 
-    /**
-     * 执行查询重写
-     *
-     * @param prompt
-     * @return
-     */
     public String doQueryRewrite(String prompt) {
         Query query = new Query(prompt);
-        // 执行查询重写
         Query transformedQuery = queryTransformer.transform(query);
-        // 输出重写后的查询
         return transformedQuery.text();
     }
 }

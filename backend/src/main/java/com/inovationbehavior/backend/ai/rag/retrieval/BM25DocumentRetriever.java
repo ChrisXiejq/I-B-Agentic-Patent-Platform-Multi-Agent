@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.retrieval;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
@@ -9,17 +9,14 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * 基于 BM25 算法的关键词检索器（面向英文文档）
- * 使用倒排索引优化；建索引时过滤停用词与过短 token，控制词表量级。
+ * 检索：基于 BM25 的关键词检索器（面向英文文档），使用倒排索引优化
  */
 public class BM25DocumentRetriever implements DocumentRetriever {
 
     private static final Pattern TOKEN_PATTERN = Pattern.compile("[\\p{L}]+|[\\p{N}]+");
     private static final double K1 = 1.2;
     private static final double B = 0.75;
-    /** 仅索引长度 >= 2 的 token，减少词表 */
     private static final int MIN_TERM_LENGTH = 2;
-    /** 英文停用词（小写），不进入倒排索引（无重复） */
     private static final Set<String> STOP_WORDS = Set.of(
             "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "has", "he", "in", "is", "it",
             "its", "of", "on", "or", "that", "the", "to", "was", "were", "will", "with", "this", "but",
@@ -36,11 +33,8 @@ public class BM25DocumentRetriever implements DocumentRetriever {
     private final int topK;
     private final int totalDocs;
     private final double avgDocLength;
-    /** 文档长度数组，docLengths[docId] = 该文档词数 */
     private final int[] docLengths;
-    /** 倒排索引：term -> (docId -> tf)，仅包含至少出现一次的 (docId, tf) */
     private final Map<String, Map<Integer, Integer>> invertedIndex;
-    /** 词文档频率：term -> 包含该词的文档数 */
     private final Map<String, Integer> docFreq;
 
     public BM25DocumentRetriever(List<Document> documents, int topK) {
@@ -99,7 +93,6 @@ public class BM25DocumentRetriever implements DocumentRetriever {
                 .collect(Collectors.toList());
     }
 
-    /** 仅索引长度足够且非停用词的 token，用于控制词表量级 */
     private static boolean shouldIndex(String term) {
         return term != null && term.length() >= MIN_TERM_LENGTH && !STOP_WORDS.contains(term);
     }
@@ -114,13 +107,11 @@ public class BM25DocumentRetriever implements DocumentRetriever {
         List<String> qTerms = tokenize(queryText);
         if (qTerms.isEmpty()) return List.of();
 
-        // 去重，且只保留会出现在索引中的词（长度>=2 且非停用词）
         Set<String> uniqueQTerms = qTerms.stream()
                 .filter(BM25DocumentRetriever::shouldIndex)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         if (uniqueQTerms.isEmpty()) return List.of();
 
-        // 候选文档 = 至少包含一个查询词的文档（从倒排索引取并集）
         Set<Integer> candidateDocIds = new HashSet<>();
         for (String term : uniqueQTerms) {
             Map<Integer, Integer> postings = invertedIndex.get(term);

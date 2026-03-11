@@ -1,12 +1,12 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.preretrieval;
 
 import org.springframework.ai.chat.prompt.PromptTemplate;
 import org.springframework.ai.rag.generation.augmentation.ContextualQueryAugmenter;
 
 /**
- * 创建上下文查询增强器的工厂
+ * 检索前：创建上下文查询增强器的工厂（空上下文时的回复模板等）
  */
-public class ContextualQueryAugmenterFactory {
+public final class ContextualQueryAugmenterFactory {
 
     public static ContextualQueryAugmenter createInstance() {
         PromptTemplate emptyContextPromptTemplate = new PromptTemplate("""

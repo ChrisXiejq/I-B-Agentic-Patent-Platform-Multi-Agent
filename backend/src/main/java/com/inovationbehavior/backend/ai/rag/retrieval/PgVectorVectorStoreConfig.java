@@ -1,5 +1,6 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.retrieval;
 
+import com.inovationbehavior.backend.ai.rag.document.RagDocumentCorpus;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
@@ -25,15 +26,13 @@ import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgDistan
 import static org.springframework.ai.vectorstore.pgvector.PgVectorStore.PgIndexType.HNSW;
 
 /**
- * PgVector 向量存储（PostgreSQL）：与 BM25 共用同一份语料，向量写入 pgvector，关键词倒排在内存。
- * 启动时增量同步：已向量化的文档（按 chunk_key 识别）跳过，仅处理新增/变更的文档；已删除的源文件对应向量会清理。
- * 必须配置 spring.ai.vectorstore.pgvector.url，否则应用启动失败。
+ * 检索：PgVector 向量存储，与 BM25 共用同一份语料；启动时增量同步。
  */
 @Configuration
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Import(PgVectorDataSourceConfig.class)  // 确保先创建 pgvectorJdbcTemplate
-@ConditionalOnProperty(name = "spring.ai.vectorstore.pgvector.url")  // 与 PgVectorDataSourceConfig 同条件，避免 @ConditionalOnBean 时序问题
+@Import(PgVectorDataSourceConfig.class)
+@ConditionalOnProperty(name = "spring.ai.vectorstore.pgvector.url")
 public class PgVectorVectorStoreConfig {
 
     private static final String VECTOR_TABLE = "vector_store";
@@ -71,21 +70,16 @@ public class PgVectorVectorStoreConfig {
         return vectorStore;
     }
 
-    /**
-     * 增量同步：已存在（chunk_key 一致）的跳过，新增/变更的文档按源文件替换写入，已删除的源对应向量清理。
-     */
     private void incrementalSync(JdbcTemplate jdbc, VectorStore vectorStore, List<Document> documents) {
         String qualifiedTable = SCHEMA + "." + VECTOR_TABLE;
         Map<String, Set<String>> existingBySource = loadExistingChunkKeysBySource(jdbc, qualifiedTable);
 
-        // 按 source 分组当前文档
         Map<String, List<Document>> bySource = documents.stream()
                 .filter(d -> d.getMetadata() != null && d.getMetadata().get("source") != null)
                 .collect(Collectors.groupingBy(d -> String.valueOf(d.getMetadata().get("source"))));
 
         Set<String> currentSources = new HashSet<>(bySource.keySet());
 
-        // 1. 删除已不存在的源文件对应向量
         for (String source : new HashSet<>(existingBySource.keySet())) {
             if (!currentSources.contains(source)) {
                 deleteBySource(jdbc, qualifiedTable, source);
@@ -93,9 +87,8 @@ public class PgVectorVectorStoreConfig {
             }
         }
 
-        // 2. 按源同步：未变更的跳过，变更的删除旧数据后写入新数据
-        int added = 0;   // 新增写入（新源文件或内容变更）
-        int skipped = 0; // 已有且未变更，跳过
+        int added = 0;
+        int skipped = 0;
         for (Map.Entry<String, List<Document>> e : bySource.entrySet()) {
             String source = e.getKey();
             List<Document> chunks = e.getValue();

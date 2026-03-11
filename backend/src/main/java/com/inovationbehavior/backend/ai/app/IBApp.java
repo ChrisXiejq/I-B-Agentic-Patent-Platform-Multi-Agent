@@ -2,9 +2,10 @@ package com.inovationbehavior.backend.ai.app;
 
 import com.inovationbehavior.backend.ai.advisor.BannedWordsAdvisor;
 import com.inovationbehavior.backend.ai.advisor.MyLoggerAdvisor;
-import com.inovationbehavior.backend.ai.rag.QueryRewriter;
+import com.inovationbehavior.backend.ai.rag.preretrieval.QueryRewriter;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
@@ -197,18 +198,24 @@ public class IBApp {
         return content;
     }
 
-    // ========== 全能力 Agent 入口：多轮记忆 + RAG 检索增强 + 工具调用 ==========
+    // ========== 全能力 Agent 入口：分层记忆（短期+长期）+ RAG + 工具调用 ==========
+
+    @Autowired(required = false)
+    @Qualifier("layeredMemoryAdvisor")
+    private Advisor layeredMemoryAdvisor;
 
     /**
-     * 全能力 Agent 同步调用：多轮记忆 + RAG（向量+BM25 融合）+ 工具调用（专利详情/热度/用户身份等）
+     * 全能力 Agent 同步调用：分层记忆（短期+长期）+ RAG（向量+BM25 融合）+ 工具调用
      */
     public String doChatWithFullAgent(String message, String chatId) {
         String rewrittenMessage = queryRewriter != null ? queryRewriter.doQueryRewrite(message) : message;
-        ChatResponse chatResponse = chatClient
-                .prompt()
-                .user(rewrittenMessage)
+        var adv = chatClient.prompt().user(rewrittenMessage)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(new MyLoggerAdvisor())
+                .advisors(new MyLoggerAdvisor());
+        if (layeredMemoryAdvisor != null) {
+            adv = adv.advisors(layeredMemoryAdvisor);
+        }
+        ChatResponse chatResponse = adv
                 .advisors(hybridRagAdvisor)
                 .toolCallbacks(allTools)
                 .call()
@@ -219,15 +226,17 @@ public class IBApp {
     }
 
     /**
-     * 全能力 Agent 流式调用：多轮记忆 + RAG + 工具调用，SSE 流式返回
+     * 全能力 Agent 流式调用：分层记忆 + RAG + 工具调用，SSE 流式返回
      */
     public Flux<String> doChatWithFullAgentStream(String message, String chatId) {
         String rewrittenMessage = queryRewriter != null ? queryRewriter.doQueryRewrite(message) : message;
-        return chatClient
-                .prompt()
-                .user(rewrittenMessage)
+        var adv = chatClient.prompt().user(rewrittenMessage)
                 .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(new MyLoggerAdvisor())
+                .advisors(new MyLoggerAdvisor());
+        if (layeredMemoryAdvisor != null) {
+            adv = adv.advisors(layeredMemoryAdvisor);
+        }
+        return adv
                 .advisors(hybridRagAdvisor)
                 .toolCallbacks(allTools)
                 .stream()

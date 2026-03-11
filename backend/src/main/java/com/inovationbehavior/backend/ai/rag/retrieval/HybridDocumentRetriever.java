@@ -1,5 +1,6 @@
-package com.inovationbehavior.backend.ai.rag;
+package com.inovationbehavior.backend.ai.rag.retrieval;
 
+import com.inovationbehavior.backend.ai.rag.postretrieval.EmbeddingReranker;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
@@ -9,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 多路召回 RAG 检索器：向量检索 + BM25 关键词检索 → RRF 融合 → Rerank
+ * 检索：多路召回（向量 + BM25）→ RRF 融合 → Rerank
  */
 public class HybridDocumentRetriever implements DocumentRetriever {
 
@@ -34,7 +35,6 @@ public class HybridDocumentRetriever implements DocumentRetriever {
 
     @Override
     public List<Document> retrieve(Query query) {
-        // 1. 多路召回
         List<Document> vectorDocs = vectorRetriever.retrieve(query);
         List<Document> bm25Docs = bm25Retriever.retrieve(query);
 
@@ -44,12 +44,9 @@ public class HybridDocumentRetriever implements DocumentRetriever {
 
         if (rankedLists.isEmpty()) return List.of();
 
-        // 2. RRF 融合
         List<Document> fused = RrfFusion.fuse(rankedLists);
-
         if (fused.isEmpty()) return List.of();
 
-        // 3. Rerank
         return reranker.rerank(query, fused);
     }
 }

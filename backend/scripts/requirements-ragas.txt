@@ -1,0 +1,3 @@
+# Python 依赖：用于 scripts/ragas_eval.py（Java 导出 JSON 后用 ragas 评估）
+ragas>=0.1.0
+openai>=1.0.0
