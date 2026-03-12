@@ -157,10 +157,6 @@ app:
       max-ragas-samples: 5         # RAGAS 评估最多样本数（每条约 4 次 LLM 调用，建议先设小值）
       ragas-export-path: "target/ragas-eval-input.json"  # Java 导出供 Python ragas 读取的文件路径
 
-# searchAPI（若使用搜索 API，在此填写 key）
-# search-api:
-#   api-key: 你的 API Key
-
 # 修改日志级别，查看 Spring AI 更多调用细节
 logging:
   level:
