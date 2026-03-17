@@ -1,5 +1,8 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.tool;
 
+import com.inovationbehavior.backend.ai.memory.working.WorkingMemoryService;
+import com.inovationbehavior.backend.ai.memory.longterm.LongTermMemoryService;
+import com.inovationbehavior.backend.ai.memory.experiential.ExperientialMemoryService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.tool.annotation.Tool;
@@ -13,7 +16,7 @@ import java.util.List;
 
 /**
  * MCP 风格记忆检索工具：Agent 在需要时显式调用 retrieve_history，按需拉取当前会话的短期/中期/长期记忆，节省 Token 并减少干扰。
- * 由 {@link MultiLevelMemoryConfig} 在 WorkingMemoryService 存在时注册为 Bean。
+ * 由 {@link com.inovationbehavior.backend.ai.memory.config.MultiLevelMemoryConfig} 在 WorkingMemoryService 存在时注册为 Bean。
  */
 @Slf4j
 public class MemoryRetrievalTool {

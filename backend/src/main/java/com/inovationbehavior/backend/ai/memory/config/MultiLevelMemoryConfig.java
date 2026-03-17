@@ -1,5 +1,12 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.config;
 
+import com.inovationbehavior.backend.ai.memory.working.WorkingMemoryService;
+import com.inovationbehavior.backend.ai.memory.longterm.LongTermMemoryService;
+import com.inovationbehavior.backend.ai.memory.experiential.ExperientialMemoryService;
+import com.inovationbehavior.backend.ai.memory.importance.ImportanceScorer;
+import com.inovationbehavior.backend.ai.memory.compression.SummaryCompressor;
+import com.inovationbehavior.backend.ai.memory.advisor.MemoryPersistenceAdvisor;
+import com.inovationbehavior.backend.ai.memory.tool.MemoryRetrievalTool;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

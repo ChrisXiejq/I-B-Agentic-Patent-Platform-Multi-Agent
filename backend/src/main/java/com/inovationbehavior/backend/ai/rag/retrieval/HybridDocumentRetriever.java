@@ -1,6 +1,6 @@
 package com.inovationbehavior.backend.ai.rag.retrieval;
 
-import com.inovationbehavior.backend.ai.rag.postretrieval.EmbeddingReranker;
+import com.inovationbehavior.backend.ai.rag.postretrieval.DocumentReranker;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
@@ -16,14 +16,14 @@ public class HybridDocumentRetriever implements DocumentRetriever {
 
     private final VectorStoreDocumentRetriever vectorRetriever;
     private final BM25DocumentRetriever bm25Retriever;
-    private final EmbeddingReranker reranker;
+    private final DocumentReranker reranker;
     private final int vectorTopK;
     private final int bm25TopK;
 
     public HybridDocumentRetriever(
             VectorStoreDocumentRetriever vectorRetriever,
             BM25DocumentRetriever bm25Retriever,
-            EmbeddingReranker reranker,
+            DocumentReranker reranker,
             int vectorTopK,
             int bm25TopK) {
         this.vectorRetriever = vectorRetriever;

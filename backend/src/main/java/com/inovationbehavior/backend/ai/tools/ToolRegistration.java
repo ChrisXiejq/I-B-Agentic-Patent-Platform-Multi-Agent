@@ -1,6 +1,6 @@
 package com.inovationbehavior.backend.ai.tools;
 
-import com.inovationbehavior.backend.ai.memory.MemoryRetrievalTool;
+import com.inovationbehavior.backend.ai.memory.tool.MemoryRetrievalTool;
 import org.springframework.ai.support.ToolCallbacks;
 import org.springframework.ai.tool.ToolCallback;
 import org.springframework.beans.factory.annotation.Autowired;

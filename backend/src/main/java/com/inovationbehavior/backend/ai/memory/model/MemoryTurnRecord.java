@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.model;
 
 import lombok.Builder;
 import lombok.Value;

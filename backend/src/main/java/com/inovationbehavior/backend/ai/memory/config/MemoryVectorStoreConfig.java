@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.config;
 
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.vectorstore.VectorStore;

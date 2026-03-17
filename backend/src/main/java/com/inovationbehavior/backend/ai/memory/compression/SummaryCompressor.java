@@ -1,4 +1,6 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.compression;
+
+import com.inovationbehavior.backend.ai.memory.model.MemoryTurnRecord;
 
 import java.util.List;
 

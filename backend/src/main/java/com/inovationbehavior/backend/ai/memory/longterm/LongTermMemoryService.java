@@ -1,5 +1,7 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.longterm;
 
+import com.inovationbehavior.backend.ai.memory.nli.NliConflictDetector;
+import com.inovationbehavior.backend.ai.memory.extraction.AtomicFactExtractor;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.document.Document;

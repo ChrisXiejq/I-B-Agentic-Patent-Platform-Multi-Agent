@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 /**
  * 检索后：基于 Embedding 相似度的 Reranker，对融合后的文档按 query-document 相似度重新排序
  */
-public class EmbeddingReranker {
+public class EmbeddingReranker implements DocumentReranker {
 
     private final EmbeddingModel embeddingModel;
     private final int topK;
@@ -20,6 +20,7 @@ public class EmbeddingReranker {
         this.topK = Math.max(1, topK);
     }
 
+    @Override
     public List<Document> rerank(Query query, List<Document> documents) {
         if (documents == null || documents.isEmpty()) return List.of();
 

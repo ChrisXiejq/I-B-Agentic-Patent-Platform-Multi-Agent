@@ -1,5 +1,10 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.advisor;
 
+import com.inovationbehavior.backend.ai.memory.working.WorkingMemoryService;
+import com.inovationbehavior.backend.ai.memory.longterm.LongTermMemoryService;
+import com.inovationbehavior.backend.ai.memory.importance.ImportanceScorer;
+import com.inovationbehavior.backend.ai.memory.experiential.ExperientialMemoryService;
+import com.inovationbehavior.backend.ai.memory.tool.MemoryRetrievalTool;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClientMessageAggregator;
 import org.springframework.ai.chat.client.ChatClientRequest;

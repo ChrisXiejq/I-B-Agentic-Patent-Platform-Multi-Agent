@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.nli;
 
 import org.springframework.ai.document.Document;
 

@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.extraction;
 
 import java.util.List;
 

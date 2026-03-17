@@ -1,7 +1,9 @@
 package com.inovationbehavior.backend.ai.rag.config;
 
 import com.inovationbehavior.backend.ai.rag.document.RagDocumentCorpus;
+import com.inovationbehavior.backend.ai.rag.postretrieval.DocumentReranker;
 import com.inovationbehavior.backend.ai.rag.postretrieval.EmbeddingReranker;
+import com.inovationbehavior.backend.ai.rag.postretrieval.CohereReranker;
 import com.inovationbehavior.backend.ai.rag.preretrieval.ContextualQueryAugmenterFactory;
 import com.inovationbehavior.backend.ai.rag.retrieval.BM25DocumentRetriever;
 import com.inovationbehavior.backend.ai.rag.retrieval.HybridDocumentRetriever;
@@ -42,13 +44,28 @@ public class HybridRagConfig {
     @Value("${app.rag.hybrid.final-top-k:6}")
     private int finalTopK;
 
+    @Value("${app.rag.cohere.enabled:false}")
+    private boolean cohereRerankEnabled;
+
+    @Value("${app.rag.cohere.api-key:}")
+    private String cohereApiKey;
+
+    @Value("${app.rag.cohere.model:rerank-multilingual-v3.0}")
+    private String cohereModel;
+
     @Bean
     public BM25DocumentRetriever bm25DocumentRetriever() {
         return new BM25DocumentRetriever(ragDocumentCorpus.getDocuments(), bm25TopK);
     }
 
+    /**
+     * Reranker：当 app.rag.cohere.enabled=true 且 api-key 已配置时使用 Cohere Rerank，否则使用 Embedding 相似度精排。
+     */
     @Bean
-    public EmbeddingReranker embeddingReranker() {
+    public DocumentReranker documentReranker() {
+        if (cohereRerankEnabled && cohereApiKey != null && !cohereApiKey.isBlank()) {
+            return new CohereReranker(cohereApiKey, cohereModel, finalTopK, null);
+        }
         return new EmbeddingReranker(embeddingModel, finalTopK);
     }
 
@@ -62,7 +79,7 @@ public class HybridRagConfig {
         return new HybridDocumentRetriever(
                 vectorRetriever,
                 bm25DocumentRetriever(),
-                embeddingReranker(),
+                documentReranker(),
                 vectorTopK,
                 bm25TopK);
     }

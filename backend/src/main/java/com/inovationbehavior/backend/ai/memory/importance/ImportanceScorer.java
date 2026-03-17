@@ -1,4 +1,4 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.importance;
 
 /**
  * 记忆重要性评分器（领域 NER 加权）。

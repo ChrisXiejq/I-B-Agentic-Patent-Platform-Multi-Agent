@@ -1,6 +1,7 @@
 package com.inovationbehavior.backend.ai.graph.nodes;
 
 import com.inovationbehavior.backend.ai.app.IBApp;
+import com.inovationbehavior.backend.ai.app.ReplanService;
 import com.inovationbehavior.backend.ai.graph.PatentGraphState;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
@@ -41,7 +42,7 @@ public class ExecutorNode {
 
         int nextCount = state.stepCount() + 1;
         int nextStepIndex = idx + 1;
-        int needReplan = IBApp.isResultInsufficient(out) ? 1 : 0;
+        int needReplan = ReplanService.isResultInsufficient(out) ? 1 : 0;
 
         log.info("{}<<< 离开节点 | task={} 输出长度={} stepCount->{} currentStepIndex->{} needReplan={} elapsedMs={}",
                 LOG_PREFIX, task, out != null ? out.length() : 0, nextCount, nextStepIndex, needReplan, elapsed);

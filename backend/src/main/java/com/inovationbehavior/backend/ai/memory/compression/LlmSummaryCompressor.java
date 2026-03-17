@@ -1,5 +1,6 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.compression;
 
+import com.inovationbehavior.backend.ai.memory.model.MemoryTurnRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.model.ChatModel;

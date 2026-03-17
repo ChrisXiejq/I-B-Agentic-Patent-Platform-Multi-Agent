@@ -1,9 +1,8 @@
 package com.inovationbehavior.backend.ai.graph.nodes;
 
-import com.inovationbehavior.backend.ai.app.IBApp;
+import com.inovationbehavior.backend.ai.app.ReplanService;
 import com.inovationbehavior.backend.ai.graph.PatentGraphState;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,10 +18,10 @@ import java.util.Map;
 @Slf4j
 public class ReplanNode {
 
-    private final IBApp ibApp;
+    private final ReplanService replanService;
 
-    public ReplanNode(@Lazy IBApp ibApp) {
-        this.ibApp = ibApp;
+    public ReplanNode(ReplanService replanService) {
+        this.replanService = replanService;
     }
 
     private static final String LOG_PREFIX = "[AgentGraph.Replan] ";
@@ -42,13 +41,13 @@ public class ReplanNode {
         if (envChanged && plan != null && currentStepIndex > 0 && currentStepIndex <= plan.size()) {
             List<String> executed = new ArrayList<>(plan.subList(0, currentStepIndex));
             List<String> remaining = plan.subList(currentStepIndex, plan.size());
-            List<String> newRemaining = ibApp.replanRemaining(userMessage, stepResults, remaining);
+            List<String> newRemaining = replanService.replanRemaining(userMessage, stepResults, remaining);
             newPlan = new ArrayList<>(executed);
             newPlan.addAll(newRemaining);
             newStepIndex = currentStepIndex;
             log.info("{} 环境变化：仅更新剩余任务 executed={} newRemaining={}", LOG_PREFIX, executed, newRemaining);
         } else {
-            newPlan = new ArrayList<>(ibApp.replan(userMessage, stepResults));
+            newPlan = new ArrayList<>(replanService.replan(userMessage, stepResults));
             newStepIndex = 0;
             log.info("{} 结果不足：整计划重算 newPlan={}", LOG_PREFIX, newPlan);
         }

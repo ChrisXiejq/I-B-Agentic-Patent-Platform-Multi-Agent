@@ -153,6 +153,11 @@ app:
       vector-top-k: 8    # 向量检索 top-k
       bm25-top-k: 8      # BM25 检索 top-k
       final-top-k: 6     # RRF 融合后 rerank 保留的 top-k
+    # Cohere Rerank：enabled=true 且 api-key 配置后使用 Cohere 精排，否则使用 Embedding 相似度精排
+    cohere:
+      enabled: false     # true=使用 Cohere Rerank API 精排
+      api-key: ""        # Cohere API Key（可从 https://dashboard.cohere.com 获取）
+      model: "rerank-multilingual-v3.0"   # 多语言；英文为主可用 rerank-english-v3.0
 
   # 多 Agent 图编排（LangGraph4j）
   agent:

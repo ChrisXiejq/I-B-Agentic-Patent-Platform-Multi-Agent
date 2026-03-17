@@ -4,17 +4,15 @@ import com.inovationbehavior.backend.ai.advisor.BannedWordsAdvisor;
 import com.inovationbehavior.backend.ai.advisor.MyLoggerAdvisor;
 import com.inovationbehavior.backend.ai.agent.GraphTaskAgent;
 import com.inovationbehavior.backend.ai.rag.preretrieval.QueryRewriter;
+import com.inovationbehavior.backend.ai.app.ReplanService;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.client.advisor.api.Advisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
-import org.springframework.ai.chat.memory.MessageWindowChatMemory;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.tool.ToolCallback;
@@ -49,30 +47,19 @@ public class IBApp {
         this.chatModel = chatModel;
     }
 
-    /** 默认注入违禁词等 Advisor 后初始化 ChatClient */
+    /** 默认注入违禁词等 Advisor 后初始化 ChatClient；对话上下文统一由三层记忆 + retrieve_history 提供，不再使用 MessageWindowChatMemory */
     @PostConstruct
     void initChatClient() {
-        MessageWindowChatMemory chatMemory = MessageWindowChatMemory.builder()
-                .chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(20)
-                .build();
         var advisors = new java.util.ArrayList<Advisor>();
         if (bannedWordsAdvisor != null) {
             advisors.add(bannedWordsAdvisor);
         }
-        advisors.add(MessageChatMemoryAdvisor.builder(chatMemory).build());
         advisors.add(new MyLoggerAdvisor());
         this.chatClient = ChatClient.builder(chatModel)
                 .defaultSystem(SYSTEM_PROMPT)
                 .defaultAdvisors(advisors)
                 .build();
     }
-
-    /** 专利咨询报告（结构化输出：标题 + 建议列表） */
-    record PatentReport(String title, List<String> suggestions) {
-    }
-
-    // RAG 知识库问答（专利/平台文档）
 
     @Resource
     private Advisor hybridRagAdvisor;
@@ -82,39 +69,11 @@ public class IBApp {
     private Advisor retrievalExpertRagAdvisor;
 
     @Resource
-    @Qualifier("IBVectorStore")
-    private VectorStore vectorStore;
-
-    @Resource
     private QueryRewriter queryRewriter;
-
-    /**
-     * 和 RAG 知识库进行对话
-     *
-     * @param message
-     * @param chatId
-     * @return
-     */
-    public String doChatWithRag(String message, String chatId) {
-        // 查询重写
-//        String rewrittenMessage = queryRewriter.doQueryRewrite(message);
-        ChatResponse chatResponse = chatClient
-                .prompt()
-                .user(message)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
-                .advisors(hybridRagAdvisor)
-                .call()
-                .chatResponse();
-        String content = chatResponse.getResult().getOutput().getText();
-        log.info("content: {}", content);
-        return content;
-    }
 
     // AI 调用工具能力
     @Resource
     private ToolCallback[] allTools;
-
-    // ========== 全能力 Agent：记忆按需检索（retrieve_history 工具）+ RAG + 工具调用 ==========
 
     @Autowired(required = false)
     @Qualifier("memoryPersistenceAdvisor")
@@ -124,14 +83,15 @@ public class IBApp {
     @Qualifier("agentTraceAdvisor")
     private Advisor agentTraceAdvisor;
 
+    @Resource
+    private ReplanService replanService;
+
     /**
-     * 多 Agent 图编排入口
+     * 多 Agent 图编排入口，提供给controller的入口
      */
     public String doChatWithMultiAgentOrFull(String message, String chatId) {
         return patentGraphRunner.run(message, chatId);
     }
-
-    // ========== 多 Agent 图编排：专家节点与路由/综合 ==========
 
     private static final String RETRIEVAL_EXPERT_PROMPT = """
             You are the retrieval expert of the patent platform. Your job is to fetch patent details, patent heat, knowledge base content, and when needed, up-to-date or general knowledge from the web.
@@ -173,9 +133,10 @@ public class IBApp {
     public String doReActForTask(String task, String message, String chatId, List<String> stepResults) {
         String systemPrompt = getPromptForTask(task);
         String effectiveMessage = message;
+        // 内部接口下线，调用websearch的兜底
         if (task != null && task.toLowerCase().contains("retrieval") && stepResults != null && !stepResults.isEmpty()) {
             String lastResult = stepResults.get(stepResults.size() - 1);
-            if (shouldRetryRetrievalWithWeb(lastResult)) {
+            if (replanService != null && ReplanService.shouldRetryRetrievalWithWeb(lastResult)) {
                 effectiveMessage = "[上一轮检索无有效结果（接口失败或无数据），请改用 searchWeb 检索该专利或相关公开信息后简要回复。] 用户问题：" + (message != null ? message : "");
                 log.info("[AgentGraph.IBApp] 检索重试：注入 searchWeb 补足提示，原消息长度={}", message != null ? message.length() : 0);
             }
@@ -188,42 +149,10 @@ public class IBApp {
                 ragAdvisor, memoryPersistenceAdvisor, agentTraceAdvisor);
         String out = agent.run(rewritten);
         String expertName = systemPrompt.contains("retrieval") ? "Retrieval" : systemPrompt.contains("analysis") ? "Analysis" : "Advice";
-        log.info("[AgentGraph.IBApp] 专家调用(IBManus) expert={} messageLength={} responseLength={}",
+        log.info("[AgentGraph.IBApp][doReActForTask] 专家调用(IBManus) expert={} messageLength={} responseLength={}",
                 expertName, effectiveMessage != null ? effectiveMessage.length() : 0, out != null ? out.length() : 0);
         return out != null ? out : "";
     }
-
-    /**
-     * 专家节点专用：单次对话（RAG + 工具 + 记忆），不走 think/act 多步；保留供非图调用或兼容。
-     */
-    public String doExpertChat(String message, String chatId, String systemPrompt) {
-        String rewritten = queryRewriter != null ? queryRewriter.doQueryRewrite(message) : message;
-        var adv = chatClient.prompt()
-                .system(systemPrompt)
-                .user(rewritten)
-                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId));
-        if (memoryPersistenceAdvisor != null) {
-            adv = adv.advisors(memoryPersistenceAdvisor);
-        }
-        if (agentTraceAdvisor != null) {
-            adv = adv.advisors(agentTraceAdvisor);
-        }
-        // 检索专家使用带“空上下文→要求 searchWeb”的 RAG，以便知识库无结果时上网查询
-        Advisor ragAdvisor = systemPrompt.contains("retrieval") && retrievalExpertRagAdvisor != null
-                ? retrievalExpertRagAdvisor : hybridRagAdvisor;
-        ChatResponse chatResponse = adv
-                .advisors(ragAdvisor)
-                .toolCallbacks(allTools)
-                .call()
-                .chatResponse();
-        String content = chatResponse.getResult().getOutput().getText();
-        String expertName = systemPrompt.contains("retrieval") ? "Retrieval" : systemPrompt.contains("analysis") ? "Analysis" : "Advice";
-        log.info("[AgentGraph.IBApp] 专家调用 expert={} messageLength={} responseLength={} (本步会触发 RAG + 工具调用，详见 AgentTrace.Tool 日志)",
-                expertName, message != null ? message.length() : 0, content != null ? content.length() : 0);
-        return content != null ? content : "";
-    }
-
-
 
     /** 简单问候或“介绍自己”类短句，无需走检索专家，直接 synthesize 即可 */
     private static boolean isSimpleGreetingOrIntro(String userMessage) {
@@ -263,7 +192,7 @@ public class IBApp {
                 .call()
                 .chatResponse();
         String content = resp.getResult().getOutput().getText();
-        log.info("[AgentGraph.IBApp] 综合节点 stepResultsCount={} finalAnswerLength={}",
+        log.info("[AgentGraph.IBApp][synthesizeAnswer] 综合节点 stepResultsCount={} finalAnswerLength={}",
                 stepResults != null ? stepResults.size() : 0, content != null ? content.length() : 0);
         return content != null ? content : "";
     }
@@ -281,22 +210,6 @@ public class IBApp {
             User message: %s
             Prior step results (if any): %s
             """;
-    private static final String REPLAN_PROMPT = """
-            You are the replanner. We already executed some steps but the last step had insufficient or empty result (e.g. no patent found, no RAG context). Output a new comma-separated list of remaining steps. Options: retrieval (try again, or suggest searchWeb), analysis, advice, synthesize.
-            If retrieval failed due to missing context, you may output: retrieval,synthesize (retrieval will be prompted to use searchWeb). If we should give up and summarize: synthesize.
-            Reply with only the comma-separated list.
-            User message: %s
-            Step results so far: %s
-            """;
-    private static final String REPLAN_REMAINING_PROMPT = """
-            You are the replanner. We detected an environment change (e.g. patent invalid/expired, no data, or API/connection failure). The remaining planned steps were: %s.
-            Output a new comma-separated list of remaining steps only. Options: retrieval, analysis, advice, synthesize.
-            - If the last result shows API or connection failure (e.g. "Unable to connect to Redis", "Failed to query patent details", "Failed to query patent heat"), you MUST output: retrieval,synthesize (so we retry retrieval using web search to supplement).
-            - If patent is invalid/expired, output: synthesize. Or: retrieval,synthesize if we should try searchWeb first.
-            Reply with only the comma-separated list.
-            User message: %s
-            Step results so far: %s
-            """;
     private static final String CHECK_ENV_PROMPT = """
             Given the last task result and the user question, does the result indicate an "environment change" that should change our remaining plan?
             Environment change includes: patent is invalid/expired/withdrawn (专利已失效/过期/撤回), no patent data, authorization failed, or similar. Answer with exactly one word: yes or no.
@@ -312,7 +225,7 @@ public class IBApp {
         if (userMessage == null) userMessage = "";
         if (stepResults == null) stepResults = List.of();
         if (isSimpleGreetingOrIntro(userMessage)) {
-            log.info("[AgentGraph.IBApp] 规划 识别为简单问候，直接 synthesize");
+            log.info("[AgentGraph.IBApp][createPlan] 规划 识别为简单问候，直接 synthesize");
             return List.of("synthesize");
         }
         String prior = stepResults.isEmpty() ? "None" : String.join("\n---\n", stepResults);
@@ -320,70 +233,8 @@ public class IBApp {
         ChatResponse resp = chatClient.prompt().user(prompt).call().chatResponse();
         String raw = resp.getResult().getOutput().getText();
         List<String> plan = parsePlan(raw);
-        log.info("[AgentGraph.IBApp] 规划 userMessage(preview)= {} -> plan={}", abbreviate(userMessage, 50), plan);
+        log.info("[AgentGraph.IBApp][createPlan] 规划 userMessage(preview)= {} -> plan={}", abbreviate(userMessage, 50), plan);
         return plan.isEmpty() ? List.of("synthesize") : plan;
-    }
-
-    /**
-     * Replan：根据当前已执行结果重新规划剩余步骤（如检索无结果时改为 retrieval+synthesize 或直接 synthesize）。
-     */
-    public List<String> replan(String userMessage, List<String> stepResults) {
-        if (userMessage == null) userMessage = "";
-        if (stepResults == null || stepResults.isEmpty()) {
-            log.info("[AgentGraph.IBApp] 重规划 无已有结果，返回 synthesize");
-            return List.of("synthesize");
-        }
-        String prior = String.join("\n---\n", stepResults);
-        String prompt = REPLAN_PROMPT.formatted(userMessage, prior);
-        ChatResponse resp = chatClient.prompt().user(prompt).call().chatResponse();
-        String raw = resp.getResult().getOutput().getText();
-        List<String> plan = parsePlan(raw);
-        log.info("[AgentGraph.IBApp] 重规划 stepResultsSize={} -> plan={}", stepResults.size(), plan);
-        return plan.isEmpty() ? List.of("synthesize") : plan;
-    }
-
-    /**
-     * 仅重规划「剩余任务」：用于环境变化时更新剩余列表，返回新剩余步骤（不含已执行部分）。
-     * 若上一步为检索且结果不足（接口/连接失败，或 "I don't know"/无有效数据），强制返回 retrieval,synthesize 以便用 searchWeb 重试补足。
-     */
-    public List<String> replanRemaining(String userMessage, List<String> stepResults, List<String> remainingTasks) {
-        if (userMessage == null) userMessage = "";
-        if (stepResults == null) stepResults = List.of();
-        String lastResult = stepResults.isEmpty() ? "" : stepResults.get(stepResults.size() - 1);
-        if (shouldRetryRetrievalWithWeb(lastResult)) {
-            log.info("[AgentGraph.IBApp] 重规划剩余 检测到检索结果不足或接口失败，强制 retrieval,synthesize 以用 searchWeb 重试");
-            return List.of("retrieval", "synthesize");
-        }
-        String prior = stepResults.isEmpty() ? "None" : String.join("\n---\n", stepResults);
-        String remainingStr = (remainingTasks == null || remainingTasks.isEmpty()) ? "synthesize" : String.join(", ", remainingTasks);
-        String prompt = REPLAN_REMAINING_PROMPT.formatted(remainingStr, userMessage, prior);
-        ChatResponse resp = chatClient.prompt().user(prompt).call().chatResponse();
-        String raw = resp.getResult().getOutput().getText();
-        List<String> newRemaining = parsePlan(raw);
-        log.info("[AgentGraph.IBApp] 重规划剩余 remaining={} -> newRemaining={}", remainingTasks, newRemaining);
-        return newRemaining.isEmpty() ? List.of("synthesize") : newRemaining;
-    }
-
-    /** 上一步结果是否为「专利接口/连接失败」且可用 searchWeb 补足（用于强制重试 retrieval） */
-    public static boolean isRetrievalFailureRecoverableWithWeb(String lastStepResult) {
-        if (lastStepResult == null || lastStepResult.isBlank()) return false;
-        String lower = lastStepResult.toLowerCase();
-        return lower.contains("unable to connect to redis") || lower.contains("failed to query patent")
-                || lower.contains("failed to query patent details") || lower.contains("failed to query patent heat")
-                || (lower.contains("connection") && lower.contains("redis"));
-    }
-
-    /**
-     * 是否应对检索步用 searchWeb 再试一次：接口/连接失败，或上一步为 retrieval 且结果不足（如 "I don't know"、无有效数据）。
-     * 为 true 时 Replan 强制 retrieval,synthesize，且第二次 retrieval 会注入「请用 searchWeb 补足」提示。
-     */
-    public static boolean shouldRetryRetrievalWithWeb(String lastStepResult) {
-        if (lastStepResult == null || lastStepResult.isBlank()) return false;
-        if (isRetrievalFailureRecoverableWithWeb(lastStepResult)) return true;
-        // 仅当上一步为 retrieval（stepResults 格式为 [Task:retrieval]\n...）且结果不足时，用 searchWeb 重试
-        String lower = lastStepResult.toLowerCase();
-        if (!lower.contains("task:retrieval") && !lower.contains("[task:retrieval]")) return false;
-        return isResultInsufficient(lastStepResult);
     }
 
     /**
@@ -399,7 +250,7 @@ public class IBApp {
         ChatResponse resp = chatClient.prompt().user(prompt).call().chatResponse();
         String raw = resp.getResult().getOutput().getText();
         boolean yes = raw != null && raw.trim().toLowerCase().startsWith("yes");
-        log.info("[AgentGraph.IBApp] 环境检查 lastResultLen={} remainingSize={} -> environmentChanged={}", lastStepResult.length(), remainingTasks.size(), yes);
+        log.info("[AgentGraph.IBApp][checkEnvironmentChange] 环境检查 lastResultLen={} remainingSize={} -> environmentChanged={}", lastStepResult.length(), remainingTasks.size(), yes);
         return yes;
     }
 
@@ -420,21 +271,27 @@ public class IBApp {
         return out;
     }
 
-    /**
-     * 判断专家输出是否“结果不足”，用于触发 Replan（如检索无结果、分析无法进行等）。
-     */
-    public static boolean isResultInsufficient(String expertOutput) {
-        if (expertOutput == null || expertOutput.isBlank()) return true;
-        String lower = expertOutput.trim().toLowerCase();
-        if (lower.length() < 10) return true;
-        if (lower.contains("i don't know") || lower.contains("i do not know") || lower.contains("don't know")) return true;
-        if (lower.contains("无法") || lower.contains("没有找到") || lower.contains("暂无") || lower.contains("无相关")) return true;
-        if (lower.contains("no patent") || lower.contains("no result") || lower.contains("insufficient")) return true;
-        if (lower.contains("请提供") && lower.length() < 80) return true;
-        return false;
-    }
-
     public String getRetrievalExpertPrompt() { return RETRIEVAL_EXPERT_PROMPT; }
     public String getAnalysisExpertPrompt() { return ANALYSIS_EXPERT_PROMPT; }
     public String getAdviceExpertPrompt() { return ADVICE_EXPERT_PROMPT; }
+
+    /**
+     * 和 RAG 知识库进行对话
+     * @param message
+     * @param chatId
+     * @return
+     * 仅用来跑RAGAS测试，不对外提供controller
+     */
+    public String doChatWithRag(String message, String chatId) {
+        ChatResponse chatResponse = chatClient
+                .prompt()
+                .user(message)
+                .advisors(spec -> spec.param(ChatMemory.CONVERSATION_ID, chatId))
+                .advisors(hybridRagAdvisor)
+                .call()
+                .chatResponse();
+        String content = chatResponse.getResult().getOutput().getText();
+        log.info("content: {}", content);
+        return content;
+    }
 }

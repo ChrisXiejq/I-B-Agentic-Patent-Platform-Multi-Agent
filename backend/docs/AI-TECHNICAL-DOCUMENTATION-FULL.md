@@ -36,7 +36,7 @@
 | executor | ExecutorNode | 对当前子任务执行一次「专家 ReAct」：调用 `ibApp.doReActForTask(task, message, chatId, stepResults)`，追加 step 结果、步数+1、needReplan。 |
 | checkResult | CheckResultNode | 判断上一步结果是否导致「环境变化」（如专利失效、无数据），写 `environmentChanged`（0/1）。 |
 | afterExpert | AfterExpertNode | 根据 needReplan、environmentChanged、是否还有剩余 step 决定下一节点：`replan` \| `synthesize` \| `dispatch`。 |
-| replan | ReplanNode | 若 environmentChanged 则只重规划「剩余步骤」；否则整计划重算。更新 `plan`、`currentStepIndex`，清 needReplan/environmentChanged。 |
+| replan | ReplanNode | 调用 `ReplanService.replanRemaining` / `replan`；若 environmentChanged 则只重规划剩余步骤，否则整计划重算。更新 `plan`、`currentStepIndex`，清 needReplan/environmentChanged。 |
 | synthesize | SynthesizeNode | 根据用户问题 + 所有 stepResults 调用 LLM 生成最终回复，写 `finalAnswer`。 |
 
 **边**：
@@ -61,13 +61,13 @@
 
 - **Execute（ExecutorNode）**  
   - 实现：按 `plan.get(currentStepIndex)` 取当前任务（retrieval/analysis/advice），调用 `IBApp.doReActForTask(task, message, chatId, stepResults)`。  
-  - 内部：query 改写 → 按 task 选专家 systemPrompt → 若为 retrieval 且上一步结果不足则注入「请用 searchWeb 补足」→ 构建 **GraphTaskAgent**（IBManus 架构：think→act 多步循环，带 RAG/记忆/Trace）→ `agent.run(rewritten)`，返回值追加到 `stepResults`，`currentStepIndex+1`，`needReplan` 由 `IBApp.isResultInsufficient(out)` 决定。
+  - 内部：query 改写 → 按 task 选专家 systemPrompt → 若为 retrieval 且上一步结果不足则注入「请用 searchWeb 补足」→ 构建 **GraphTaskAgent**（IBManus 架构：think→act 多步循环，带 RAG/记忆/Trace）→ `agent.run(rewritten)`，返回值追加到 `stepResults`，`currentStepIndex+1`，`needReplan` 由 `ReplanService.isResultInsufficient(out)` 决定。
 
 - **Replan（ReplanNode）**  
   - 触发：AfterExpert 根据 `needReplan` 或 `environmentChanged` 将 nextNode 设为 `replan`。  
-  - 实现：  
-    - **环境变化**：`replanRemaining(userMessage, stepResults, remainingTasks)`，仅重规划剩余步骤；若 `shouldRetryRetrievalWithWeb(lastResult)` 则强制 `["retrieval","synthesize"]` 以便用 searchWeb 重试。  
-    - **结果不足**：`replan(userMessage, stepResults)` 整计划重算。  
+  - 实现：**ReplanNode 调用 `ReplanService`**（与 IBApp 解耦）：  
+    - **环境变化**：`replanService.replanRemaining(userMessage, stepResults, remainingTasks)`，仅重规划剩余步骤；若 `ReplanService.shouldRetryRetrievalWithWeb(lastResult)` 则强制 `["retrieval","synthesize"]` 以便用 searchWeb 重试。  
+    - **结果不足**：`replanService.replan(userMessage, stepResults)` 整计划重算。  
   - 写回：新 `plan`、新 `currentStepIndex`，`needReplan=0`，`environmentChanged=0`。
 
 **CheckResult**：`IBApp.checkEnvironmentChange(lastStepResult, remainingTasks, userMessage)` 用 LLM 判断上一步是否表示环境变化（专利失效、无数据等），返回 yes/no，写入 `environmentChanged`。
@@ -122,6 +122,15 @@
 **传递方式**：每节点 `apply(state)` 返回 `Map<String, Object>`（只包含本节点要更新的 key），LangGraph4j 按 SCHEMA 合并到共享 state；下一节点读取同一 state（如 `plan()`、`currentStepIndex()`、`stepResults()`）。例如 Executor 写入 `STEP_RESULTS`（appender 追加）、`STEP_COUNT`、`CURRENT_STEP_INDEX`、`NEED_REPLAN`；Synthesize 读取 `stepResults()` 与 `userMessage()` 生成 `FINAL_ANSWER`。
 
 **信息流**：用户消息 → Planner 生成 plan → Dispatch 按 plan 派发 → Executor 每步把「当前任务 + 用户消息 + 已有 stepResults」交给 GraphTaskAgent，专家输出追加到 stepResults → CheckResult 用「最后一条 stepResult」判断环境变化 → AfterExpert 决定继续/重规划/结束 → Replan 时用「userMessage + stepResults + remainingTasks」重算剩余步骤 → Synthesize 用「userMessage + 全部 stepResults」生成最终答案。
+
+### 1.7 为什么重规划逻辑在 ReplanService 而不是 IBApp 或 ReplanNode？
+
+- **历史原因**：早期把「规划 + 重规划 + 综合 + 环境检查」都放在 **IBApp** 里，图节点只做「读 state → 调 IBApp → 写 state」，这样 IBApp 成为图相关 LLM 调用的唯一入口，节点保持薄、避免循环依赖。但重规划（`replan`、`replanRemaining`、`shouldRetryRetrievalWithWeb`、`isResultInsufficient` 等）从职责上属于「重规划」领域，与「应用入口 / 全能力对话」的 IBApp 无关，放在 IBApp 会导致类膨胀、职责混杂。
+- **当前设计**：重规划逻辑已抽到 **`ai/app/ReplanService`**：
+  - **ReplanNode** 只依赖 `ReplanService`，调用 `replanService.replan()` 与 `replanService.replanRemaining()`，不再依赖 IBApp。
+  - **ExecutorNode** 判断 `needReplan` 时调用 `ReplanService.isResultInsufficient(out)`（静态方法）。
+  - **IBApp.doReActForTask** 在「检索且上一步结果不足」时调用 `ReplanService.shouldRetryRetrievalWithWeb(lastResult)` 以决定是否注入 searchWeb 补足提示；IBApp 仅保留「执行单任务」与「规划/综合/环境检查」等入口相关逻辑。
+- **为何不直接放进 ReplanNode**：若把 LLM 调用、REPLAN 提示词、`parsePlan`、`shouldRetryRetrievalWithWeb` 等全部塞进 ReplanNode，节点会变得臃肿且难以单测；且 `isResultInsufficient` 会被 ExecutorNode 与 doReActForTask 共用，放在 ReplanNode 会导致 ExecutorNode 依赖 ReplanNode（语义奇怪）。抽成 **ReplanService** 后，ReplanNode 与 IBApp 按需注入，职责清晰、便于测试与扩展。
 
 ---
 
@@ -316,19 +325,83 @@
 
 每个 Advisor 实现 **CallAdvisor**（同步）和/或 **StreamAdvisor**（流式），通过 **getOrder()** 参与排序；**before** 在请求进入链时执行，**after** 在得到响应后执行（同步在 adviseCall 内，流式在 adviseStream 的 aggregate 回调中）。
 
-#### 6.2.1 AgentTraceAdvisor（TracerAdvisor）
+图内专家链上主要用到的四个 Advisor 如下。
 
-- **职责**：可观测——记录每次请求/响应的长度与预览、工具调用列表（name/arguments）、usage 与 model。  
-- **实现**：`adviseCall` 中 before(request) → chain.nextCall(request) → after(response)；`adviseStream` 中 before → nextStream，再用 `ChatClientMessageAggregator.aggregateChatClientResponse` 在流结束后调用 after。  
-- **Order**：`Ordered.LOWEST_PRECEDENCE - 200`，尽量早执行以便看到完整链路。  
-- **配合**：可与 `TracingToolCallbackProvider` 一起使用，同时看到每次工具调用的真实执行与返回。
+---
 
-#### 6.2.2 其余 Advisor
+#### 6.2.1 hybridRagAdvisor
 
-- **BannedWordsAdvisor**：请求前检查用户输入是否命中违禁词，命中则抛异常；`Ordered.HIGHEST_PRECEDENCE`，最先执行。  
-- **MyLoggerAdvisor**：打 Request/Response 日志；在 ChatClient defaultAdvisors 中加入。  
-- **MemoryPersistenceAdvisor**：请求后写入三层记忆（Working → 溢出写 Experiential/Long-Term），不向 prompt 注入；实现 CallAdvisor + StreamAdvisor。  
-- **ReReadingAdvisor**：当前未在图或全能力链中挂载，为可选扩展。
+| 项目 | 说明 |
+|------|------|
+| **定义位置** | `ai/rag/config/HybridRagConfig.java`，Bean 方法 `hybridRagAdvisor()`。 |
+| **类型** | Spring AI 的 `RetrievalAugmentationAdvisor`，非自定义类。 |
+| **作用** | 在每次 ChatClient 请求时：先用 `DocumentRetriever`（本项目的 `hybridDocumentRetriever`）做混合检索（向量 + BM25 → RRF → Rerank），再用 `QueryAugmenter`（`ContextualQueryAugmenterFactory.createInstance()`）处理 query；若有检索结果，将「Context information is below...」+ 文档片段注入到发给 LLM 的 prompt 中，实现 RAG 增强。 |
+| **空上下文行为** | 使用默认的 `ContextualQueryAugmenter`：`allowEmptyContext(false)`，空上下文时用固定话术模板要求模型直接回复「知识库无相关内容，可输入专利号或描述需求以调用工具」，**不**触发 searchWeb。 |
+| **使用场景** | 图内 **analysis**、**advice** 等非检索专家；以及全能力单轮对话（如 `doExpertChat` 中 `.advisors(hybridRagAdvisor)`）。 |
+
+---
+
+#### 6.2.2 retrievalExpertRagAdvisor
+
+| 项目 | 说明 |
+|------|------|
+| **定义位置** | `ai/rag/config/HybridRagConfig.java`，Bean 方法 `retrievalExpertRagAdvisor()`，`@Qualifier("retrievalExpertRagAdvisor")`。 |
+| **类型** | 同上，`RetrievalAugmentationAdvisor`，仅配置不同。 |
+| **作用** | 与 hybridRagAdvisor 一样做混合检索并注入上下文，区别在 **QueryAugmenter**：使用 `ContextualQueryAugmenterFactory.createInstanceForRetrievalExpertWithWebFallback()`。 |
+| **空上下文行为** | `allowEmptyContext(true)`，空上下文时使用专用模板：保留用户问题，并**明确要求必须先调用 searchWeb** 获取网络信息再回答，从而在知识库无命中时自动引导模型使用网页搜索工具。 |
+| **使用场景** | 图内 **retrieval** 专家（`IBApp.doReActForTask` 中当 systemPrompt 包含 "retrieval" 时选用此 Advisor）。 |
+
+---
+
+#### 6.2.3 memoryPersistenceAdvisor
+
+| 项目 | 说明 |
+|------|------|
+| **定义位置** | 实现类 `ai/memory/MemoryPersistenceAdvisor.java`；Bean 在 `ai/memory/MultiLevelMemoryConfig.java` 中声明，`@Bean("memoryPersistenceAdvisor")`。 |
+| **类型** | 自定义类，实现 `CallAdvisor`、`StreamAdvisor`。 |
+| **作用** | **仅做持久化，不向 Prompt 注入任何内容**。在每轮对话**结束后**（after 链）：根据 request 中的 conversationId、用户消息、以及 response 中的助手回复，调用 `persistTurn(conversationId, userMessage, assistantMessage)`，依次写入三层记忆——Working Memory（`workingMemoryService.addTurn`，可能触发滑动窗口压缩）、若压缩产生摘要则写入 Experiential（`experientialMemoryService.addSummary`）、再按重要性等条件写入 Long-Term（`longTermMemoryService.storeIfEligible`）。 |
+| **Order** | `Ordered.LOWEST_PRECEDENCE + 100`，在链中偏后执行，确保在拿到完整回复后再写记忆。 |
+| **流式** | 同步用 `adviseCall` 直接取 response 文本写盘；流式用 `ChatClientMessageAggregator.aggregateChatClientResponse` 在流结束后再取聚合结果写盘。 |
+| **记忆检索** | 不由本 Advisor 注入；由 Agent 通过 **MemoryRetrievalTool**（`retrieve_history`）按需拉取，节省 token 并减少干扰。 |
+
+---
+
+#### 6.2.4 agentTraceAdvisor
+
+| 项目 | 说明 |
+|------|------|
+| **定义位置** | `ai/advisor/AgentTraceAdvisor.java`；Bean 在 `ai/config/AgentTraceConfig.java` 中声明，`@Qualifier("agentTraceAdvisor")`。 |
+| **类型** | 自定义类，实现 `CallAdvisor`、`StreamAdvisor`。 |
+| **作用** | **可观测**：在请求前（before）打日志：conversationId、用户消息长度与预览（如 120 字）；在响应后（after）打日志：助手回复长度与预览（如 200 字）、本轮若有工具调用则逐条打印 `name` 与 `arguments` 预览（300 字）、以及 metadata 中的 usage、model。便于排查与理解 Agent 的思考与执行过程。 |
+| **Order** | `Ordered.LOWEST_PRECEDENCE - 200`，数值较小，在链中**较早**执行，从而能包住整次请求-响应与工具调用。 |
+| **流式** | 流式时先 before，再 `nextStream`，用 `ChatClientMessageAggregator.aggregateChatClientResponse` 在流结束后调用 after，因此看到的是「整段回复聚合后」的日志。 |
+| **配合** | 可与 `TracingToolCallbackProvider`（`app.agent.trace-tools=true`）配合，同时看到每次工具执行的入参与返回值。 |
+
+---
+
+#### 6.2.5 为什么这些 Advisor 不在同一包（advisor）下？
+
+项目中与 ChatClient 链相关的 Advisor 分布在 **advisor**、**memory**、**rag/config** 等不同包，原因如下：
+
+| Advisor | 所在包/位置 | 原因 |
+|---------|-------------|------|
+| **AgentTraceAdvisor** | `ai/advisor/` | 通用可观测逻辑，与具体业务域无关，放在统一的 advisor 包更符合「横切关注点」的归类；Bean 在 `ai/config/AgentTraceConfig` 中创建。 |
+| **BannedWordsAdvisor、MyLoggerAdvisor、ReReadingAdvisor** | `ai/advisor/` | 同样是通用能力（违禁词、日志、重读），与领域无关，归入 advisor 包。 |
+| **memoryPersistenceAdvisor**（实现类 MemoryPersistenceAdvisor） | `ai/memory/` | 强依赖 WorkingMemoryService、LongTermMemoryService、ImportanceScorer、ExperientialMemoryService，是「记忆模块」的**写盘出口**，与记忆的配置、Bean 组装（MultiLevelMemoryConfig）放在同一包，便于内聚；若放到 advisor 包，memory 包还要反向依赖 advisor，边界更乱。 |
+| **hybridRagAdvisor、retrievalExpertRagAdvisor** | 无独立类，Bean 在 `ai/rag/config/HybridRagConfig` | 二者是 Spring AI 的 `RetrievalAugmentationAdvisor` 的**两种配置实例**，依赖 VectorStore、RagDocumentCorpus、EmbeddingModel、DocumentRetriever、QueryAugmenter 等，全部在 RAG 模块内；放在 `rag/config` 与 HybridDocumentRetriever、BM25、Reranker、ContextualQueryAugmenterFactory 等一起配置，符合「RAG 能力内聚」。若在 advisor 包里建两个空壳类只为了返回这两个 Bean，反而增加无意义的间接层。 |
+
+**总结**：  
+- **有自定义实现、且属于某一领域能力**的（如记忆写盘），放在该领域包（memory）并在此包内声明 Bean，保持高内聚、避免循环依赖。  
+- **仅对框架/第三方 Advisor 做参数组装**的（如两种 RAG Advisor），放在对应功能配置包（rag/config），不单独建 advisor 子类。  
+- **与领域无关的横切逻辑**（日志、追踪、违禁词）放在 `ai/advisor/`，便于统一查找与扩展。
+
+---
+
+#### 6.2.6 其余 Advisor（简要）
+
+- **BannedWordsAdvisor**（`ai/advisor/`）：请求前检查用户输入是否命中违禁词，命中则抛异常；`Ordered.HIGHEST_PRECEDENCE`，最先执行。  
+- **MyLoggerAdvisor**（`ai/advisor/`）：打 Request/Response 日志；在 ChatClient defaultAdvisors 中加入。  
+- **ReReadingAdvisor**（`ai/advisor/`）：当前未在图或全能力链中挂载，为可选扩展。
 
 **典型链顺序**（ChatClient defaultAdvisors）：BannedWordsAdvisor（`HIGHEST_PRECEDENCE`）→ MessageChatMemoryAdvisor → MyLoggerAdvisor；全能力/专家链上再追加 ragAdvisor、memoryPersistenceAdvisor（`LOWEST_PRECEDENCE + 100`）、agentTraceAdvisor（`LOWEST_PRECEDENCE - 200`）；GraphTaskAgent 内 extraAdvisors 顺序为 memoryPersistence → agentTrace → rag。
 

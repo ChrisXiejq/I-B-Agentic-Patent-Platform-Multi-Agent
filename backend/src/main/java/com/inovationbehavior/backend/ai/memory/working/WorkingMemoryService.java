@@ -1,5 +1,8 @@
-package com.inovationbehavior.backend.ai.memory;
+package com.inovationbehavior.backend.ai.memory.working;
 
+import com.inovationbehavior.backend.ai.memory.importance.ImportanceScorer;
+import com.inovationbehavior.backend.ai.memory.compression.SummaryCompressor;
+import com.inovationbehavior.backend.ai.memory.model.MemoryTurnRecord;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 

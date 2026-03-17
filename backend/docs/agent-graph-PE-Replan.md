@@ -39,7 +39,7 @@ START
 
 ## 4. 何时触发 Replan / 更新剩余任务
 
-- **结果不足（needReplan=1）**：`IBApp.isResultInsufficient(expertOutput)` 为 true（空、过短、“无法”“没有找到”“无相关”“请提供”等）→ 进入 replan，**整计划重算**。
+- **结果不足（needReplan=1）**：`ReplanService.isResultInsufficient(expertOutput)` 为 true（空、过短、“无法”“没有找到”“无相关”“请提供”等）→ 进入 replan，**整计划重算**。
 - **环境变化（environmentChanged=1）**：规则或 LLM 检测到“专利已失效/过期/撤回”“无此专利”等 → 进入 replan，**只更新剩余任务列表**（`replanRemaining`），已执行部分与 currentStepIndex 保留。
 
 ## 5. 配置与安全
