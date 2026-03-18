@@ -158,6 +158,28 @@ app:
       enabled: false     # true=使用 Cohere Rerank API 精排
       api-key: ""        # Cohere API Key（可从 https://dashboard.cohere.com 获取）
       model: "rerank-multilingual-v3.0"   # 多语言；英文为主可用 rerank-english-v3.0
+    # CRAG 检索后门控：对召回文档做质量评分，Correct 直接用 / Ambiguous 过滤 / Incorrect 返回空触发 searchWeb
+    crag:
+      enabled: false
+      correct-threshold: 0.7    # >= 此分数视为 CORRECT，直接使用文档
+      ambiguous-threshold: 0.35 # >= 此且 < correct 视为 AMBIGUOUS，可截断；< 此视为 INCORRECT 走空上下文
+      ambiguous-trim-to-half: true  # AMBIGUOUS 时是否只保留前一半文档
+    # HyDE：用 LLM 生成假设性文档再做向量检索，提升召回
+    hyde:
+      enabled: false
+    # GraphRAG 风格：实体抽取 + 实体-文档索引，查询时按实体召回并与主检索 RRF 融合
+    graphrag:
+      enabled: false
+      entity-top-k: 6       # 实体路召回条数（与主检索 RRF 融合前）
+      index-max-docs: 300   # 建索引时最多处理的文档数（避免启动过慢）
+    # 多查询融合：将 query 扩展为多条子查询，分别检索后 RRF 融合（迭代/多轮 RAG）
+    multi-query:
+      enabled: false
+      max-queries: 3   # LLM 扩展出的子查询数量（含原查询）
+    # 文档级访问控制（多租户）：检索时按 metadata tenant_id 过滤
+    tenant:
+      enabled: false
+      default-id: ""   # 入库文档默认 tenant_id，空则不加；启用 tenant 时建议为每个租户单独同步文档
 
   # 多 Agent 图编排（LangGraph4j）
   agent:
@@ -165,6 +187,14 @@ app:
       max-steps: 5   # 专家节点最大步数，防止死循环
     # true=打印每次工具调用的名称、入参和返回（[AgentTrace.Tool]），便于观察图内专家调用了哪些工具
     trace-tools: true
+    # Trace 按 session 查询时默认条数（GET /ai/agent/trace?sessionId=xxx）
+    trace-query-limit: 50
+    # 是否将 Trace 落库（需先执行 docs/schema-agent-trace.sql 建表，且需 MySQL 主库）
+    trace-persist: false
+
+  # Agent Skills（SKILL.md 渐进式披露，Anthropic 风格）
+  skills:
+    location: "classpath:skills/*/SKILL.md"   # 扫描路径，每子目录一个 SKILL.md
 
   # RAG/Agent 自动化评估（测试集路径、RAGAS 样本数等）
   eval:

@@ -26,7 +26,8 @@ public class GraphTaskAgent extends ToolCallAgent {
             String chatId,
             Advisor ragAdvisor,
             Advisor memoryPersistenceAdvisor,
-            Advisor agentTraceAdvisor) {
+            Advisor agentTraceAdvisor,
+            Advisor persistingTraceAdvisor) {
         super(allTools);
         setName("graphTask");
         setSystemPrompt(systemPrompt != null ? systemPrompt : "");
@@ -39,6 +40,9 @@ public class GraphTaskAgent extends ToolCallAgent {
         }
         if (agentTraceAdvisor != null) {
             advisors.add(agentTraceAdvisor);
+        }
+        if (persistingTraceAdvisor != null) {
+            advisors.add(persistingTraceAdvisor);
         }
         if (ragAdvisor != null) {
             advisors.add(ragAdvisor);

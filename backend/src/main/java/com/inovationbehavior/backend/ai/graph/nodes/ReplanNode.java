@@ -2,7 +2,9 @@ package com.inovationbehavior.backend.ai.graph.nodes;
 
 import com.inovationbehavior.backend.ai.app.ReplanService;
 import com.inovationbehavior.backend.ai.graph.PatentGraphState;
+import com.inovationbehavior.backend.ai.reflect.ReflectionService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -19,6 +21,9 @@ import java.util.Map;
 public class ReplanNode {
 
     private final ReplanService replanService;
+
+    @Autowired(required = false)
+    private ReflectionService reflectionService;
 
     public ReplanNode(ReplanService replanService) {
         this.replanService = replanService;
@@ -50,6 +55,9 @@ public class ReplanNode {
             newPlan = new ArrayList<>(replanService.replan(userMessage, stepResults));
             newStepIndex = 0;
             log.info("{} 结果不足：整计划重算 newPlan={}", LOG_PREFIX, newPlan);
+            if (reflectionService != null && state.chatId().isPresent()) {
+                reflectionService.reflect(state.chatId().get(), userMessage, stepResults, false);
+            }
         }
 
         log.info("{}<<< 离开节点 | newPlan={} newStepIndex={}", LOG_PREFIX, newPlan, newStepIndex);

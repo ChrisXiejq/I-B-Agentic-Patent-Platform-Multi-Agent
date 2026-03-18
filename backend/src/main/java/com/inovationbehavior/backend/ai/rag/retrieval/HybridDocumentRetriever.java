@@ -4,24 +4,23 @@ import com.inovationbehavior.backend.ai.rag.postretrieval.DocumentReranker;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.rag.Query;
 import org.springframework.ai.rag.retrieval.search.DocumentRetriever;
-import org.springframework.ai.rag.retrieval.search.VectorStoreDocumentRetriever;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 检索：多路召回（向量 + BM25）→ RRF 融合 → Rerank
+ * 检索：多路召回（向量 + BM25）→ RRF 融合 → Rerank。向量路可为原始或 HyDE 包装。
  */
 public class HybridDocumentRetriever implements DocumentRetriever {
 
-    private final VectorStoreDocumentRetriever vectorRetriever;
+    private final DocumentRetriever vectorRetriever;
     private final BM25DocumentRetriever bm25Retriever;
     private final DocumentReranker reranker;
     private final int vectorTopK;
     private final int bm25TopK;
 
     public HybridDocumentRetriever(
-            VectorStoreDocumentRetriever vectorRetriever,
+            DocumentRetriever vectorRetriever,
             BM25DocumentRetriever bm25Retriever,
             DocumentReranker reranker,
             int vectorTopK,

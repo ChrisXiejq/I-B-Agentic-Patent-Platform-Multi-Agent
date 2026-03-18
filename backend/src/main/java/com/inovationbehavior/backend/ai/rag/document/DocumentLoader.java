@@ -30,10 +30,17 @@ public class DocumentLoader {
     @Value("${app.rag.documents.path:classpath*:documents/**/*.md}")
     private String documentsPath;
 
+    @Value("${app.rag.tenant.default-id:}")
+    private String defaultTenantId;
+
     public DocumentLoader(ResourcePatternResolver resourcePatternResolver,
                           @Qualifier("chunkSplitter") ChunkSplitter splitter) {
         this.resourcePatternResolver = resourcePatternResolver;
         this.splitter = splitter;
+    }
+
+    private String defaultTenantId() {
+        return defaultTenantId != null ? defaultTenantId.trim() : "";
     }
 
     /**
@@ -46,11 +53,15 @@ public class DocumentLoader {
             log.warn("No Markdown files found at [{}], RAG corpus will be empty.", documentsPath);
             return List.of();
         }
+        String defaultTenantId = defaultTenantId();
         List<Document> chunks = splitter.apply(raw);
         for (Document chunk : chunks) {
             String source = String.valueOf(chunk.getMetadata().getOrDefault("source", ""));
             String chunkKey = DigestUtil.sha256Hex(source + "|" + chunk.getText());
             chunk.getMetadata().put("chunk_key", chunkKey);
+            if (defaultTenantId != null && !defaultTenantId.isBlank()) {
+                chunk.getMetadata().put("tenant_id", defaultTenantId);
+            }
         }
         log.info("RAG documents loaded and chunked: {} raw docs -> {} chunks from [{}]",
                 raw.size(), chunks.size(), documentsPath);

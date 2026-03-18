@@ -30,7 +30,7 @@ public class PlannerNode {
         List<String> stepResults = state.stepResults();
         log.info("{}>>> 进入节点 | chatId={} userMessage(preview)={}",
                 LOG_PREFIX, state.chatId().orElse("default"), abbreviate(userMessage, 80));
-        List<String> plan = ibApp.createPlan(userMessage, stepResults);
+        List<String> plan = ibApp.createPlan(userMessage, stepResults, state.chatId().orElse(""));
         List<String> planCopy = new ArrayList<>(plan);
         log.info("{}<<< 离开节点 | plan={}", LOG_PREFIX, planCopy);
         return Map.of(

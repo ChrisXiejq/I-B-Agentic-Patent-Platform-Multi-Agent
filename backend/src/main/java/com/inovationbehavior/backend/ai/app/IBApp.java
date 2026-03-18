@@ -19,8 +19,10 @@ import org.springframework.ai.tool.ToolCallback;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Component;
 import com.inovationbehavior.backend.ai.graph.PatentGraphRunner;
+import com.inovationbehavior.backend.ai.skills.SkillRegistry;
 
 import java.util.List;
+import java.util.Optional;
 
 @Component
 @Slf4j
@@ -83,8 +85,18 @@ public class IBApp {
     @Qualifier("agentTraceAdvisor")
     private Advisor agentTraceAdvisor;
 
+    @Autowired(required = false)
+    @Qualifier("persistingTraceAdvisor")
+    private Advisor persistingTraceAdvisor;
+
     @Resource
     private ReplanService replanService;
+
+    @Autowired(required = false)
+    private SkillRegistry skillRegistry;
+
+    @Autowired(required = false)
+    private com.inovationbehavior.backend.ai.reflect.ReflectionService reflectionService;
 
     /**
      * 多 Agent 图编排入口，提供给controller的入口
@@ -114,16 +126,51 @@ public class IBApp {
             Call doTerminate when the task is done.
             """;
 
+    /** Citation 指令：使用检索上下文作答时须标注来源，便于审计与可追溯。 */
+    private static final String CITATION_INSTRUCTION = "\n\nWhen answering based on the retrieved context above, you MUST cite the source for each factual claim using the format [1], [2], etc., corresponding to the document order in the context. Do not make up information that is not in the context.";
+
     /**
      * 按任务类型返回对应 system prompt（Executor 单节点按 task 选 prompt）。
+     * 若启用 SkillRegistry，优先从 skills/*/SKILL.md 读取指令，否则回退到内置常量。
      */
     public String getPromptForTask(String task) {
-        if (task == null) return getRetrievalExpertPrompt();
+        if (task == null) return resolvePrompt("retrieval");
         String t = task.trim().toLowerCase();
-        if (t.contains("retrieval")) return getRetrievalExpertPrompt();
-        if (t.contains("analysis")) return getAnalysisExpertPrompt();
-        if (t.contains("advice")) return getAdviceExpertPrompt();
-        return getRetrievalExpertPrompt();
+        if (t.contains("retrieval")) return resolvePrompt("retrieval");
+        if (t.contains("analysis")) return resolvePrompt("analysis");
+        if (t.contains("advice")) return resolvePrompt("advice");
+        return resolvePrompt("retrieval");
+    }
+
+    private String resolvePrompt(String skillId) {
+        String base;
+        if (skillRegistry != null) {
+            Optional<String> instructions = skillRegistry.getInstructions(skillId);
+            if (instructions.isPresent()) base = instructions.get();
+            else base = switch (skillId) {
+                case "analysis" -> getAnalysisExpertPrompt();
+                case "advice" -> getAdviceExpertPrompt();
+                default -> getRetrievalExpertPrompt();
+            };
+        } else {
+            base = switch (skillId) {
+                case "analysis" -> getAnalysisExpertPrompt();
+                case "advice" -> getAdviceExpertPrompt();
+                default -> getRetrievalExpertPrompt();
+            };
+        }
+        if ("retrieval".equals(skillId) || "analysis".equals(skillId) || "advice".equals(skillId)) {
+            base = base + CITATION_INSTRUCTION;
+        }
+        return base;
+    }
+
+    /** 反思规则后缀：供 doReActForTask 注入到 system prompt，便于专家遵循历史教训。 */
+    public String getReflectionSuffix(String chatId) {
+        if (reflectionService == null || chatId == null) return "";
+        java.util.List<String> rules = reflectionService.getRecentRules(chatId, 5);
+        if (rules == null || rules.isEmpty()) return "";
+        return "\n\nLessons learned from past steps (follow when relevant): " + String.join("; ", rules);
     }
 
     /**
@@ -131,7 +178,7 @@ public class IBApp {
      * 按任务类型注入 RAG/记忆/Trace，若 retrieval 上一步不足则注入 searchWeb 补足提示。
      */
     public String doReActForTask(String task, String message, String chatId, List<String> stepResults) {
-        String systemPrompt = getPromptForTask(task);
+        String systemPrompt = getPromptForTask(task) + getReflectionSuffix(chatId);
         String effectiveMessage = message;
         // 内部接口下线，调用websearch的兜底
         if (task != null && task.toLowerCase().contains("retrieval") && stepResults != null && !stepResults.isEmpty()) {
@@ -142,11 +189,12 @@ public class IBApp {
             }
         }
         String rewritten = queryRewriter != null ? queryRewriter.doQueryRewrite(effectiveMessage) : effectiveMessage;
-        Advisor ragAdvisor = systemPrompt.contains("retrieval") && retrievalExpertRagAdvisor != null
+        boolean isRetrievalTask = task != null && task.trim().toLowerCase().contains("retrieval");
+        Advisor ragAdvisor = isRetrievalTask && retrievalExpertRagAdvisor != null
                 ? retrievalExpertRagAdvisor : hybridRagAdvisor;
         GraphTaskAgent agent = new GraphTaskAgent(
                 allTools, chatModel, systemPrompt, GRAPH_TASK_NEXT_STEP_PROMPT, chatId,
-                ragAdvisor, memoryPersistenceAdvisor, agentTraceAdvisor);
+                ragAdvisor, memoryPersistenceAdvisor, agentTraceAdvisor, persistingTraceAdvisor);
         String out = agent.run(rewritten);
         String expertName = systemPrompt.contains("retrieval") ? "Retrieval" : systemPrompt.contains("analysis") ? "Analysis" : "Advice";
         log.info("[AgentGraph.IBApp][doReActForTask] 专家调用(IBManus) expert={} messageLength={} responseLength={}",
@@ -219,9 +267,9 @@ public class IBApp {
             """;
 
     /**
-     * P&E 初始规划：根据用户问题（及已有 stepResults，通常为空）生成执行计划。
+     * P&E 初始规划：根据用户问题（及已有 stepResults、chatId 用于注入反思规则）生成执行计划。
      */
-    public List<String> createPlan(String userMessage, List<String> stepResults) {
+    public List<String> createPlan(String userMessage, List<String> stepResults, String chatId) {
         if (userMessage == null) userMessage = "";
         if (stepResults == null) stepResults = List.of();
         if (isSimpleGreetingOrIntro(userMessage)) {
@@ -229,7 +277,14 @@ public class IBApp {
             return List.of("synthesize");
         }
         String prior = stepResults.isEmpty() ? "None" : String.join("\n---\n", stepResults);
-        String prompt = PLAN_PROMPT.formatted(userMessage, prior);
+        String lessons = "";
+        if (reflectionService != null && chatId != null) {
+            List<String> rules = reflectionService.getRecentRules(chatId, 5);
+            if (rules != null && !rules.isEmpty()) {
+                lessons = "\nPrior lessons (consider when planning): " + String.join("; ", rules);
+            }
+        }
+        String prompt = PLAN_PROMPT.formatted(userMessage, prior) + lessons;
         ChatResponse resp = chatClient.prompt().user(prompt).call().chatResponse();
         String raw = resp.getResult().getOutput().getText();
         List<String> plan = parsePlan(raw);

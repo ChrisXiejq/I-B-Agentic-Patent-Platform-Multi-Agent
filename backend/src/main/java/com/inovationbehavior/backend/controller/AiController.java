@@ -1,16 +1,20 @@
 package com.inovationbehavior.backend.controller;
 
 import com.inovationbehavior.backend.ai.app.IBApp;
+import com.inovationbehavior.backend.ai.audit.AgentTraceRecord;
+import com.inovationbehavior.backend.ai.audit.AgentTraceService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.ai.tool.ToolCallback;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -27,6 +31,23 @@ public class AiController {
 
     @Resource
     private ToolCallback[] allTools;
+
+    @Autowired(required = false)
+    private AgentTraceService agentTraceService;
+
+    // ==================== Agent Trace 审计（按 session 查询） ====================
+
+    /**
+     * 按会话 ID 查询 Agent 审计 Trace（请求/响应/工具调用/检索结果）。
+     * 需先执行 docs/schema-agent-trace.sql 建表并启用 PersistingTraceAdvisor。
+     */
+    @GetMapping(value = "/agent/trace", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<AgentTraceRecord> getTraceBySession(
+            @RequestParam @NotBlank(message = "sessionId is required") String sessionId,
+            @RequestParam(required = false, defaultValue = "50") int limit) {
+        if (agentTraceService == null) return List.of();
+        return agentTraceService.findBySessionId(sessionId, limit);
+    }
 
     // ==================== 全能力 Agent 统一入口（推荐） ====================
 
